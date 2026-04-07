@@ -1,0 +1,138 @@
+
+Main Topic	Subtopic
+Supervised Learning	Linear Regression
+Supervised Learning	Polynomial Regression
+Supervised Learning	Ridge / Lasso / Elastic Net
+Supervised Learning	Logistic Regression
+Supervised Learning	Linear Discriminant Analysis (LDA)
+Supervised Learning	k‑Nearest Neighbors (k‑NN)
+Supervised Learning	Decision Trees (CART, ID3, C4.5)
+Supervised Learning	Support Vector Machines (SVM)
+Supervised Learning	Naïve Bayes
+Supervised Learning	Ensemble Methods (see dedicated row)
+Supervised Learning	Time Series Forecasting (ARIMA, Prophet, etc.)
+Supervised Learning	Survival Analysis
+Supervised Learning	Multi‑label Classification
+Supervised Learning	Multi‑output Regression
+Unsupervised Learning	Clustering (k‑means, hierarchical, DBSCAN, GMM)
+Unsupervised Learning	Dimensionality Reduction (PCA, t‑SNE, UMAP, ICA)
+Unsupervised Learning	Association Rule Mining (Apriori, FP‑Growth)
+Unsupervised Learning	Anomaly Detection (isolation forest, one‑class SVM)
+Unsupervised Learning	Matrix Factorization (NMF, SVD)
+Semi‑supervised Learning	Self‑training
+Semi‑supervised Learning	Co‑training
+Semi‑supervised Learning	Graph‑based Methods
+Semi‑supervised Learning	Generative Models (e.g., VAE for pseudo‑labelling)
+Self‑supervised Learning	Contrastive Learning (SimCLR, MoCo)
+Self‑supervised Learning	Masked Autoencoders (MAE)
+Self‑supervised Learning	Predictive Coding (e.g., BERT’s masked LM)
+Self‑supervised Learning	Jigsaw Puzzles / Rotation Prediction
+Reinforcement Learning	Markov Decision Processes (MDP)
+Reinforcement Learning	Dynamic Programming (Policy/Value Iteration)
+Reinforcement Learning	Monte Carlo Methods
+Reinforcement Learning	Temporal Difference Learning (Q‑learning, SARSA)
+Reinforcement Learning	Deep RL (DQN, DDPG, PPO, A3C)
+Reinforcement Learning	Policy Gradients (REINFORCE, TRPO)
+Reinforcement Learning	Multi‑agent RL
+Reinforcement Learning	Inverse RL
+Reinforcement Learning	Hierarchical RL
+Transfer Learning	Domain Adaptation
+Transfer Learning	Fine‑tuning (pre‑trained models)
+Transfer Learning	Feature Extraction
+Transfer Learning	Zero‑shot Learning
+Transfer Learning	Few‑shot Learning
+Meta‑Learning	Learn‑to‑Learn (MAML, Reptile)
+Meta‑Learning	Metric‑based (Prototypical Networks)
+Meta‑Learning	Memory‑augmented (Neural Turing Machines)
+Online Learning	Stochastic Gradient Descent (online mode)
+Online Learning	Follow‑the‑Regularized‑Leader (FTRL)
+Online Learning	Multi‑armed Bandits (UCB, Thompson sampling)
+Active Learning	Uncertainty Sampling
+Active Learning	Query‑by‑Committee
+Active Learning	Expected Model Change
+Ensemble Methods	Bagging (Random Forest)
+Ensemble Methods	Boosting (AdaBoost, Gradient Boosting, XGBoost, LightGBM, CatBoost)
+Ensemble Methods	Stacking / Blending
+Ensemble Methods	Voting (hard / soft)
+Ensemble Methods	Bayesian Model Averaging
+Deep Learning	Artificial Neural Networks (MLP)
+Deep Learning	Convolutional Neural Networks (CNN)
+Deep Learning	Recurrent Neural Networks (RNN, LSTM, GRU)
+Deep Learning	Transformers (BERT, GPT, ViT)
+Deep Learning	Generative Adversarial Networks (GAN)
+Deep Learning	Variational Autoencoders (VAE)
+Deep Learning	Diffusion Models
+Deep Learning	Graph Neural Networks (GNN, GCN, GAT)
+Deep Learning	Attention Mechanisms
+Deep Learning	Normalizing Flows
+Deep Learning	Spiking Neural Networks
+Deep Learning	Neural Architecture Search (NAS)
+Model Evaluation & Validation	Train / Validation / Test Split
+Model Evaluation & Validation	Cross‑validation (k‑fold, LOOCV)
+Model Evaluation & Validation	Metrics (accuracy, precision, recall, F1, ROC‑AUC, RMSE, MAE, R², log‑loss)
+Model Evaluation & Validation	Confusion Matrix
+Model Evaluation & Validation	Bias‑Variance Tradeoff
+Model Evaluation & Validation	Overfitting / Underfitting
+Model Evaluation & Validation	Learning Curves
+Model Evaluation & Validation	Calibration Curves (reliability diagrams)
+Feature Engineering & Selection	Scaling (MinMax, Standard, Robust)
+Feature Engineering & Selection	Encoding (one‑hot, label, target, frequency)
+Feature Engineering & Selection	Handling Missing Values
+Feature Engineering & Selection	Binning / Discretization
+Feature Engineering & Selection	Polynomial Features
+Feature Engineering & Selection	Feature Selection (filter, wrapper, embedded)
+Feature Engineering & Selection	Feature Extraction (PCA, LDA, autoencoders)
+Optimization Algorithms	Gradient Descent (batch, mini‑batch, SGD)
+Optimization Algorithms	Momentum / Nesterov
+Optimization Algorithms	AdaGrad, RMSprop, Adam, Nadam
+Optimization Algorithms	Newton’s Method / Quasi‑Newton (BFGS, L‑BFGS)
+Regularization	L1 (Lasso) & L2 (Ridge)
+Regularization	Dropout
+Regularization	Batch Normalization
+Regularization	Layer Normalization
+Regularization	Early Stopping
+Regularization	Data Augmentation
+Regularization	Weight Decay
+Probabilistic Graphical Models	Bayesian Networks
+Probabilistic Graphical Models	Markov Random Fields
+Probabilistic Graphical Models	Hidden Markov Models (HMM)
+Probabilistic Graphical Models	Conditional Random Fields (CRF)
+Bayesian Methods	Bayesian Inference (MCMC, Variational Inference)
+Bayesian Methods	Gaussian Processes
+Bayesian Methods	Bayesian Linear Regression
+Bayesian Methods	Bayesian Optimization
+Data Preprocessing	Data Cleaning (outliers, duplicates)
+Data Preprocessing	Sampling (random, stratified, cluster)
+Data Preprocessing	Data Splitting (temporal, stratified)
+Data Preprocessing	Handling Imbalanced Data (SMOTE, ADASYN, class weighting)
+Imbalanced Learning	Resampling (oversampling, undersampling)
+Imbalanced Learning	Cost‑sensitive Learning
+Imbalanced Learning	Ensemble for Imbalance (RUSBoost, EasyEnsemble)
+Multi‑task Learning	Hard / Soft Parameter Sharing
+Multi‑task Learning	Task‑specific / Shared Layers
+Continual Learning	Catastrophic Forgetting
+Continual Learning	Elastic Weight Consolidation (EWC)
+Continual Learning	Progressive Neural Networks
+Continual Learning	Memory Replay
+Explainable AI (XAI)	SHAP
+Explainable AI (XAI)	LIME
+Explainable AI (XAI)	Saliency Maps / Grad‑CAM
+Explainable AI (XAI)	Feature Importance (permutation, tree‑based)
+Explainable AI (XAI)	Counterfactual Explanations
+MLOps & Deployment	Model Versioning (DVC, MLflow)
+MLOps & Deployment	Model Serving (REST API, TensorFlow Serving, TorchServe)
+MLOps & Deployment	Monitoring & Drift Detection (data drift, concept drift)
+MLOps & Deployment	CI/CD for ML (GitHub Actions, Kubeflow)
+Ethical ML	Fairness Metrics (demographic parity, equalized odds)
+Ethical ML	Bias Mitigation (pre‑processing, in‑processing, post‑processing)
+Ethical ML	Privacy (differential privacy, federated learning)
+Ethical ML	Model Interpretability Requirements
+Automated ML (AutoML)	Hyperparameter Optimization (grid search, random search, Bayesian optimization)
+Automated ML (AutoML)	Neural Architecture Search (NAS)
+Automated ML (AutoML)	Automated Feature Engineering (AutoFeat, Featuretools)
+Specialized Domains	Natural Language Processing (tokenization, embeddings, seq2seq, attention, LLMs)
+Specialized Domains	Computer Vision (object detection, segmentation, image generation, video analysis)
+Specialized Domains	Speech Processing (ASR, TTS, speaker identification)
+Specialized Domains	Recommender Systems (collaborative filtering, content‑based, hybrid)
+Specialized Domains	Time Series Analysis (decomposition, forecasting, anomaly detection)
+Specialized Domains	Graph Analytics (node classification, link prediction, graph generation)
