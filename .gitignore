@@ -1,0 +1,25 @@
+# Python
+*.pyc
+__pycache__/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+
+# Data
+*.csv
+*.pkl
+*.h5
+
+# Environment
+.env
+venv/
+env/
+.venv/
+
+# Mac
+.DS_Store
