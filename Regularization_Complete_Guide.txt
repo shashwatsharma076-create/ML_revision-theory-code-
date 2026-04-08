@@ -1,0 +1,995 @@
+================================================================================
+              LASSO, RIDGE & ELASTIC NET REGRESSION
+              Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                           TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to Regularization
+2. Why Regularization?
+3. Ridge Regression (L2 Regularization)
+   3.1 Mathematical Formulation
+   3.2 Derivation
+   3.3 Geometric Interpretation
+   3.4 Implementation
+4. Lasso Regression (L1 Regularization)
+   4.1 Mathematical Formulation
+   4.2 Derivation
+   4.3 Geometric Interpretation
+   4.4 Feature Selection Property
+   4.5 Implementation
+5. Elastic Net Regression (L1 + L2)
+   5.1 Mathematical Formulation
+   5.2 When to Use Elastic Net
+   5.3 Implementation
+6. Choosing Between Ridge, Lasso, and Elastic Net
+7. Practical Considerations
+8. Complete Code Examples
+
+================================================================================
+                    1. INTRODUCTION TO REGULARIZATION
+================================================================================
+
+Regularization is a technique used to prevent OVERFITTING in machine learning
+models by adding a penalty term to the loss function.
+
+The general form of a regularized loss function:
+
+┌─────────────────────────────────────────────────────────────────────┐
+│              Loss = Original Loss + λ × Penalty                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Types of Regularization:
+┌─────────────────┬─────────────┬──────────────────────────────────────┐
+│ Type            │ Penalty     │ Effect                               │
+├─────────────────┼─────────────┼──────────────────────────────────────┤
+│ Ridge (L2)      │ ||w||²₂    │ Shrinks coefficients                 │
+│ Lasso (L1)      │ ||w||₁     │ Feature selection (sparsity)          │
+│ Elastic Net     │ α||w||₁ +   │ Combines both                        │
+│                 │ (1-α)||w||²₂│                                      │
+└─────────────────┴─────────────┴──────────────────────────────────────┘
+
+================================================================================
+                    2. WHY REGULARIZATION?
+================================================================================
+
+PROBLEM: OVERFITTING
+
+When training data is limited or model is too complex:
+• Model learns noise in training data
+• Poor generalization to new data
+• Coefficients become too large
+
+Example of Overfitting:
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Training Error: 0.01  (very low)                                  │
+│   Test Error: 0.45    (very high)  ← BAD!                          │
+│                                                                     │
+│   This indicates overfitting - model memorized training data        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+SOLUTION: REGULARIZATION
+
+Regularization adds a penalty for large coefficients:
+• Controls model complexity
+• Reduces variance (prevents overfitting)
+• May increase bias slightly but improves overall prediction
+
+Bias-Variance Trade-off:
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Total Error = Bias² + Variance + Irreducible Error               │
+│                                                                     │
+│   Less Regularization:                                              │
+│     → Low bias, High variance (overfitting)                        │
+│                                                                     │
+│   More Regularization:                                               │
+│     → High bias, Low variance (underfitting)                       │
+│                                                                     │
+│   Goal: Find optimal λ for best test performance                    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. RIDGE REGRESSION (L2 REGULARIZATION)
+================================================================================
+
+Also known as: Tikhonov Regularization, Weight Decay, L2 Penalty
+
+--------------------------------------------------------------------------------
+                    3.1 MATHEMATICAL FORMULATION
+--------------------------------------------------------------------------------
+
+In Linear Regression, we minimize MSE:
+    J(w) = (1/m) Σᵢ (yᵢ - ŷᵢ)²
+    ŷᵢ = w·xᵢ + b
+
+In Ridge Regression, we add L2 penalty:
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   J_Ridge(w) = (1/m) Σᵢ (yᵢ - ŷᵢ)² + λ Σⱼ wⱼ²                      │
+│                                                                     │
+│   Or equivalently:                                                   │
+│   J_Ridge(w) = MSE + λ × ||w||²₂                                   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Where:
+    m = number of training examples
+    w = weight vector (excluding bias)
+    λ = regularization strength (hyperparameter)
+    ||w||²₂ = Σⱼ wⱼ² (L2 norm squared)
+
+Note: Bias term b is usually NOT regularized (only weights w)
+
+--------------------------------------------------------------------------------
+                    3.2 DERIVATION
+--------------------------------------------------------------------------------
+
+CLOSED-FORM SOLUTION:
+
+Let's derive the optimal weights for Ridge Regression.
+
+Step 1: Write the loss function
+    J(w) = (1/m) ||Xw - y||² + λ ||w||²
+
+Step 2: Take derivative and set to zero
+    ∂J/∂w = (2/m) X^T(Xw - y) + 2λw = 0
+    X^T(Xw - y) + mλw = 0
+    X^T Xw + mλ Iw = X^T y
+    (X^T X + mλI) w = X^T y
+
+Step 3: Solve for w
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   ŵ_Ridge = (X^T X + mλI)⁻¹ X^T y                                 │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Where:
+    I = identity matrix
+    m = number of samples
+    λ = regularization parameter
+
+Key Insight: Adding mλI to X^T X makes it invertible even if X^T X is singular!
+
+SINGULAR vs NON-SINGULAR MATRIX:
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Without Regularization (Linear Regression):                       │
+│   If X^T X is singular (not invertible):                            │
+│     → Cannot solve directly                                          │
+│     → Problem: multicollinearity                                    │
+│                                                                     │
+│   With Ridge Regularization:                                        │
+│   X^T X + mλI is ALWAYS invertible (λ > 0)                         │
+│     → Always have a solution                                         │
+│     → Stable solution                                                │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+GRADIENT DESCENT SOLUTION:
+
+For optimization, the gradient is:
+    ∂J/∂w = (2/m) X^T(Xw - y) + 2λw
+
+Update rule:
+    w := w - α × [(2/m) X^T(Xw - y) + 2λw]
+    w := w(1 - 2αλ) - α × (2/m) X^T(Xw - y)
+
+The term (1 - 2αλ) < 1 causes weights to shrink toward zero!
+
+--------------------------------------------------------------------------------
+                    3.3 GEOMETRIC INTERPRETATION
+--------------------------------------------------------------------------------
+
+Ridge Regression geometrically constrains the solution.
+
+In high dimensions (multiple features):
+• Unregularized solution can be anywhere in parameter space
+• Ridge adds constraint: w₁² + w₂² + ... ≤ t
+• Solution is projected onto an L2 ball (sphere)
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Unregularized: ŵ = (X^T X)⁻¹ X^T y                               │
+│                                                                     │
+│   Ridge: ŵ = (X^T X + λI)⁻¹ X^T y                                 │
+│                                                                     │
+│   Effect: Coefficients are shrunk toward zero but NOT exactly zero   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Visualization (2D case):
+    
+                    Loss Contours (ellipses)
+                           ╱  ╲
+                         ╱ ╲╱  ╲      Ridge constraint
+                        ╱  ●  ╲    /   (circle)
+                       ╱  ╱╲   ╲  /
+                      ╱  ╱  ╲   ╲/
+                     ╱__╱    ╲__╱
+                      ● = Unregularized solution
+                      ◉ = Ridge solution (on constraint boundary)
+
+The solution lies where the loss contours touch the constraint circle.
+
+--------------------------------------------------------------------------------
+                    3.4 RIDGE IMPLEMENTATION
+--------------------------------------------------------------------------------
+
+from sklearn.linear_model import Ridge
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+
+# Generate synthetic data
+X, y = make_regression(
+    n_samples=1000, n_features=10, noise=10, random_state=42
+)
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Without regularization (for comparison)
+from sklearn.linear_model import LinearRegression
+
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+y_pred_lr = lr.predict(X_test)
+
+print("Linear Regression (No Regularization):")
+print(f"  Train MSE: {mean_squared_error(y_train, lr.predict(X_train)):.4f}")
+print(f"  Test MSE: {mean_squared_error(y_test, y_pred_lr):.4f}")
+print(f"  Test R²: {r2_score(y_test, y_pred_lr):.4f}")
+print(f"  Coefficient magnitudes: {np.abs(lr.coef_).mean():.4f}")
+
+# Ridge Regression with different λ values
+print("\nRidge Regression:")
+for alpha in [0.001, 0.01, 0.1, 1, 10, 100]:
+    ridge = Ridge(alpha=alpha)
+    ridge.fit(X_train, y_train)
+    y_pred = ridge.predict(X_test)
+    
+    print(f"  α={alpha:>6}: Train MSE={mean_squared_error(y_train, ridge.predict(X_train)):.2f}, "
+          f"Test MSE={mean_squared_error(y_test, y_pred):.2f}, "
+          f"R²={r2_score(y_test, y_pred):.4f}, "
+          f"Coef mean={np.abs(ridge.coef_).mean():.4f}")
+
+Note: In sklearn, the parameter is called 'alpha' (not λ).
+The Ridge loss is: MSE + alpha * ||w||²
+
+================================================================================
+                    4. LASSO REGRESSION (L1 REGULARIZATION)
+================================================================================
+
+LASSO = Least Absolute Shrinkage and Selection Operator
+
+--------------------------------------------------------------------------------
+                    4.1 MATHEMATICAL FORMULATION
+--------------------------------------------------------------------------------
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   J_Lasso(w) = (1/m) Σᵢ (yᵢ - ŷᵢ)² + λ Σⱼ |wⱼ|                   │
+│                                                                     │
+│   Or equivalently:                                                   │
+│   J_Lasso(w) = MSE + λ × ||w||₁                                     │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Where:
+    ||w||₁ = Σⱼ |wⱼ| (L1 norm - sum of absolute values)
+
+--------------------------------------------------------------------------------
+                    4.2 DERIVATION
+--------------------------------------------------------------------------------
+
+Lasso does NOT have a closed-form solution because |w| is not differentiable.
+
+However, we can derive the solution for a single parameter:
+
+For a model with single feature x and target y:
+
+Step 1: Standardize x (mean=0, std=1)
+    x' = (x - mean(x)) / std(x)
+
+Step 2: The Lasso solution for single weight:
+    
+    ŵ_Lasso = sign(ŵ) × max(0, |ŵ| - λ)
+
+Where:
+    ŵ = x^T y / (x^T x) = unregularized OLS estimate
+    sign(ŵ) = +1 if ŵ > 0, -1 if ŵ < 0
+
+This is called "soft thresholding":
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Soft Thresholding:                                                 │
+│                                                                     │
+│       ŵ_Lasso                                                        │
+│         │                                                            │
+│       ŵ┼──────●───────────────                                     │
+│        │      │                                                      │
+│    ────┼──────┼──────────●─────────────── ŵ                       │
+│        │     -λ       │        λ                                   │
+│        │               │                                            │
+│       -λ│    ┌───┐     │                                            │
+│    ─────┼────│   │────┼────                                        │
+│        │    └───┘     │                                            │
+│        │               │                                            │
+│        └───────────────┘                                            │
+│                                                                     │
+│   If |ŵ| > λ: ŵ_Lasso = ŵ - λ × sign(ŵ)                             │
+│   If |ŵ| ≤ λ: ŵ_Lasso = 0  ← SPARSITY!                             │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+GRADIENT DESCENT (Subgradient Method):
+
+Since |w| is not differentiable at 0, we use subgradient:
+
+    ∂|w|/∂w = sign(w) for w ≠ 0
+    ∂|w|/∂w ∈ [-1, 1] for w = 0
+
+Update rule:
+    w := w - α × [∂MSE/∂w + λ × sign(w)]
+
+Note: At w=0, the subgradient can be any value in [-λ, λ].
+
+COORDINATE DESCENT (Efficient algorithm):
+
+For each weight wⱼ:
+    wⱼ := SoftThreshold(Sⱼ, λ)
+
+Where Sⱼ is the partial residual.
+
+--------------------------------------------------------------------------------
+                    4.3 GEOMETRIC INTERPRETATION
+--------------------------------------------------------------------------------
+
+Lasso constrains weights using L1 norm (diamond shape).
+
+In 2D: w₁ + |w₂| ≤ t (diamond constraint)
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│                        Loss Contours                                │
+│                      ╱  ╲                                          │
+│                    ╱ ╲╱  ╲                                        │
+│                  ╱    ●    ╲                                       │
+│                ╱    ╱│╲    ╲                                      │
+│              ╱    ╱  │  ╲    ╲                                     │
+│            ╱____╱___│___╲____╲                                    │
+│                  ◉   Diamond Constraint                             │
+│                                                                     │
+│            ● = Unregularized solution                              │
+│            ◉ = Lasso solution (on corner)                          │
+│                                                                     │
+│   KEY: Lasso solution often lies on a CORNER of the diamond        │
+│   Corners correspond to sparse solutions (some w = 0)               │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Why corners create sparsity:
+• Diamond has sharp corners at coordinate axes
+• Loss contours more likely to touch at corners
+• Corner means one coefficient is zero
+
+--------------------------------------------------------------------------------
+                    4.4 FEATURE SELECTION PROPERTY
+--------------------------------------------------------------------------------
+
+SPARSITY IN LASSO:
+
+Lasso naturally sets some coefficients to exactly zero!
+
+Why is this useful?
+• Feature selection: Identify important features
+• Interpretability: Focus on relevant variables
+• Reduced complexity: Simpler model
+• Memory efficiency: Fewer parameters to store
+
+Example:
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Suppose true model has only 2 important features:                │
+│   y = 3x₁ + 2x₂ + noise                                             │
+│                                                                     │
+│   With 100 features (many irrelevant):                              │
+│                                                                     │
+│   Ridge: y = 0.5x₁ + 0.3x₂ + 0.1x₃ + ... (all non-zero)          │
+│                                                                     │
+│   Lasso: y = 2.9x₁ + 1.8x₂ + 0x₃ + ... (sparse!)                  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+IRREPRESENTABLE CONDITION:
+
+Lasso can recover true sparse solution if:
+• Features are not highly correlated with each other
+• Sufficient signal strength
+
+When Lasso fails (irrepresentable condition):
+• Highly correlated features
+• Only one will be selected (unstable)
+
+--------------------------------------------------------------------------------
+                    4.5 LASSO IMPLEMENTATION
+--------------------------------------------------------------------------------
+
+from sklearn.linear_model import Lasso, LassoCV
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+
+# Generate data with sparse true coefficients
+X, y = make_regression(
+    n_samples=500, n_features=20, 
+    n_informative=5,  # Only 5 features are relevant
+    noise=10, random_state=42
+)
+
+# Important: Standardize features for Lasso
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42
+)
+
+# Lasso with different α values
+print("Lasso Regression (Feature Selection):")
+print("-" * 70)
+print(f"{'Alpha':>8} | {'Non-zero Coefs':>15} | {'Test MSE':>10} | {'Test R²':>8}")
+print("-" * 70)
+
+for alpha in [0.001, 0.01, 0.1, 0.5, 1.0]:
+    lasso = Lasso(alpha=alpha, max_iter=10000)
+    lasso.fit(X_train, y_train)
+    y_pred = lasso.predict(X_test)
+    
+    n_nonzero = np.sum(lasso.coef_ != 0)
+    print(f"{alpha:>8.3f} | {n_nonzero:>15} | {mean_squared_error(y_test, y_pred):>10.4f} | {r2_score(y_test, y_pred):>8.4f}")
+
+# Show which features are selected
+print("\nFeature Selection (α=0.1):")
+lasso = Lasso(alpha=0.1, max_iter=10000)
+lasso.fit(X_train, y_train)
+
+print(f"Total features: {X.shape[1]}")
+print(f"Selected features: {np.sum(lasso.coef_ != 0)}")
+print("\nCoefficient values:")
+for i, coef in enumerate(lasso.coef_):
+    marker = "★" if coef != 0 else " "
+    print(f"  {marker} Feature {i}: {coef:.4f}")
+
+# Cross-validation for optimal α
+print("\n" + "="*70)
+print("Lasso with Cross-Validation (Automatic α Selection):")
+print("="*70)
+
+lasso_cv = LassoCV(alphas=np.logspace(-4, 1, 50), cv=5, max_iter=10000)
+lasso_cv.fit(X_train, y_train)
+
+print(f"Optimal α: {lasso_cv.alpha_:.6f}")
+print(f"Selected features: {np.sum(lasso_cv.coef_ != 0)}")
+print(f"Test R²: {r2_score(y_test, lasso_cv.predict(X_test)):.4f}")
+
+================================================================================
+                    5. ELASTIC NET REGRESSION (L1 + L2)
+================================================================================
+
+Elastic Net combines the benefits of both Ridge and Lasso.
+
+--------------------------------------------------------------------------------
+                    5.1 MATHEMATICAL FORMULATION
+--------------------------------------------------------------------------------
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   J_ElasticNet(w) = MSE + λ₁ Σⱼ |wⱼ| + λ₂ Σⱼ wⱼ²                  │
+│                                                                     │
+│   Or using mixing parameter ρ:                                      │
+│   J_ElasticNet(w) = MSE + λ × [ρ × ||w||₁ + (1-ρ) × ||w||²₂]      │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+Where:
+    λ = total regularization strength
+    ρ (l1_ratio) = proportion of L1 penalty (0 ≤ ρ ≤ 1)
+    
+    ρ = 0: Pure Ridge (L2 only)
+    ρ = 1: Pure Lasso (L1 only)
+    0 < ρ < 1: Elastic Net (combination)
+
+In sklearn:
+    elastic_net = ElasticNet(alpha=λ, l1_ratio=ρ)
+
+--------------------------------------------------------------------------------
+                    5.2 WHEN TO USE ELASTIC NET
+--------------------------------------------------------------------------------
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   USE RIDGE when:                                                   │
+│   • All features are potentially important                          │
+│   • Features are highly correlated (multicollinearity)              │
+│   • Need stable solution                                            │
+│                                                                     │
+│   USE LASSO when:                                                   │
+│   • Need feature selection                                          │
+│   • Only a few features matter                                      │
+│   • Features are relatively independent                             │
+│   • Interpretability is crucial                                     │
+│                                                                     │
+│   USE ELASTIC NET when:                                             │
+│   • Features are correlated AND you want selection                  │
+│   • p >> n (more features than samples)                             │
+│   • Grouped selection (select all correlated features together)     │
+│   • Neither pure Ridge nor pure Lasso works well                   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+GROUPED SELECTION:
+
+Ridge: Shrinks all correlated features equally
+Lasso: Selects one, ignores others (unstable)
+Elastic Net: Selects all correlated features together!
+
+Example: Three highly correlated features x₁, x₂, x₃
+
+    True: y = x₁ + x₂ + x₃ + noise
+    
+    Ridge:  w₁ ≈ w₂ ≈ w₃ (all shrunk equally)
+    Lasso:   w₁ ≠ 0, w₂ = w₃ = 0 (unstable selection)
+    Elastic: w₁ ≠ 0, w₂ ≠ 0, w₃ ≠ 0 (all selected!)
+
+--------------------------------------------------------------------------------
+                    5.3 ELASTIC NET IMPLEMENTATION
+--------------------------------------------------------------------------------
+
+from sklearn.linear_model import ElasticNet, ElasticNetCV
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+
+# Generate data with correlated features
+X, y = make_regression(
+    n_samples=500, n_features=20,
+    n_informative=5,
+    effective_rank=3,  # Create some correlation
+    noise=10, random_state=42
+)
+
+# Standardize
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42
+)
+
+# Compare Ridge, Lasso, and ElasticNet
+print("Comparison: Ridge vs Lasso vs Elastic Net")
+print("="*70)
+
+results = {}
+
+# Ridge
+ridge = Ridge(alpha=1.0)
+ridge.fit(X_train, y_train)
+results['Ridge'] = {
+    'model': ridge,
+    'non_zero': np.sum(ridge.coef_ != 0),
+    'test_mse': mean_squared_error(y_test, ridge.predict(X_test)),
+    'test_r2': r2_score(y_test, ridge.predict(X_test))
+}
+
+# Lasso
+lasso = Lasso(alpha=0.1, max_iter=10000)
+lasso.fit(X_train, y_train)
+results['Lasso'] = {
+    'model': lasso,
+    'non_zero': np.sum(lasso.coef_ != 0),
+    'test_mse': mean_squared_error(y_test, lasso.predict(X_test)),
+    'test_r2': r2_score(y_test, lasso.predict(X_test))
+}
+
+# Elastic Net with different L1 ratios
+for l1_ratio in [0.2, 0.5, 0.8]:
+    en = ElasticNet(alpha=0.1, l1_ratio=l1_ratio, max_iter=10000)
+    en.fit(X_train, y_train)
+    results[f'ElasticNet (ρ={l1_ratio})'] = {
+        'model': en,
+        'non_zero': np.sum(en.coef_ != 0),
+        'test_mse': mean_squared_error(y_test, en.predict(X_test)),
+        'test_r2': r2_score(y_test, en.predict(X_test))
+    }
+
+print(f"{'Model':>25} | {'Non-zero':>10} | {'Test MSE':>10} | {'Test R²':>8}")
+print("-"*70)
+for name, res in results.items():
+    print(f"{name:>25} | {res['non_zero']:>10} | {res['test_mse']:>10.4f} | {res['test_r2']:>8.4f}")
+
+# ElasticNet with Cross-Validation
+print("\n" + "="*70)
+print("ElasticNet with Cross-Validation:")
+print("="*70)
+
+# Grid of hyperparameters
+alphas = np.logspace(-4, 1, 30)
+l1_ratios = [0.1, 0.3, 0.5, 0.7, 0.9, 0.95, 0.99]
+
+elastic_cv = ElasticNetCV(
+    alphas=alphas, 
+    l1_ratio=l1_ratios,
+    cv=5, 
+    max_iter=10000,
+    random_state=42
+)
+elastic_cv.fit(X_train, y_train)
+
+print(f"Optimal α: {elastic_cv.alpha_:.6f}")
+print(f"Optimal L1 ratio: {elastic_cv.l1_ratio_:.2f}")
+print(f"Selected features: {np.sum(elastic_cv.coef_ != 0)}")
+print(f"Test R²: {r2_score(y_test, elastic_cv.predict(X_test)):.4f}")
+
+================================================================================
+                    6. CHOOSING BETWEEN RIDGE, LASSO, ELASTIC NET
+================================================================================
+
+DECISION FLOWCHART:
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Start                                                             │
+│     │                                                               │
+│     ▼                                                               │
+│   Are features highly correlated? ──No──► Are you doing feature    │
+│     │                                       selection?                │
+│    Yes                                          │                   │
+│     │                                    ┌────┴────┐                 │
+│     ▼                                    │         │                 │
+│   Use ElasticNet or Ridge              No        Yes                │
+│     │                                    │         │                 │
+│     │                                    ▼         ▼                 │
+│     │                               Ridge      Lasso                  │
+│     │                                                               │
+│     ▼                                                               │
+│   Do you need grouped selection?                                     │
+│     │                                                               │
+│  ┌──┴──┐                                                            │
+│  │     │                                                             │
+│ Yes   No                                                             │
+│  │     │                                                             │
+│  ▼     ▼                                                             │
+│ ElasticNet Can you interpret the model easily?                        │
+│  │           │                                                       │
+│  │        ┌──┴──┐                                                    │
+│  │        │     │                                                    │
+│  │       Yes   No                                                    │
+│  │        │     │                                                    │
+│  │        ▼     ▼                                                    │
+│  │      Lasso Ridge                                                  │
+│  │                                                                   │
+└──┴───────────────────────────────────────────────────────────────────┘
+
+PRACTICAL RECOMMENDATIONS:
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ Scenario                      │ Recommended Method                   │
+├───────────────────────────────┼──────────────────────────────────────┤
+│ n >> p (many samples)        │ Ridge (stable)                       │
+│ p >> n (many features)       │ Lasso or ElasticNet                  │
+│ Some important, many not     │ Lasso (feature selection)            │
+│ Correlated features          │ Ridge or ElasticNet                  │
+│ Grouped features             │ ElasticNet                           │
+│ Want interpretability        │ Lasso                                │
+│ Want stability               │ Ridge                                │
+│ Uncertain                    │ ElasticNetCV or LassoCV              │
+└───────────────────────────────┴──────────────────────────────────────┘
+
+================================================================================
+                    7. PRACTICAL CONSIDERATIONS
+================================================================================
+
+7.1 FEATURE STANDARDIZATION
+
+IMPORTANT: Always standardize features before applying regularization!
+
+Reason:
+• L1 and L2 penalties are not scale-invariant
+• Features with larger scales would dominate without standardization
+
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+7.2 CHOOSING λ (ALPHA)
+
+Methods:
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   1. Cross-Validation (Recommended)                                 │
+│      RidgeCV, LassoCV, ElasticNetCV                                  │
+│                                                                     │
+│   2. Grid Search                                                     │
+│      Search over λ ∈ {0.001, 0.01, 0.1, 1, 10, 100}                │
+│                                                                     │
+│   3. Analytical Methods                                             │
+│      Cp statistic, AIC, BIC                                          │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+7.3 BIAS-VARIANCE TRADE-OFF
+
+Effect of λ on coefficients:
+
+λ = 0:  No regularization → w = OLS estimate (may overfit)
+λ → ∞: Strong regularization → w → 0 (may underfit)
+
+Optimal λ: Somewhere in between, found via cross-validation.
+
+7.4 LEARNING CURVES
+
+Plot training and validation error vs λ to diagnose:
+
+    High variance (overfitting): 
+        - Large gap between train and val error
+        - Reduce λ (less regularization)
+    
+    High bias (underfitting):
+        - Both train and val error are high
+        - Increase λ (more regularization)
+
+================================================================================
+                    8. COMPLETE CODE EXAMPLES
+================================================================================
+
+================================================================================
+EXAMPLE 1: Comparing All Methods on Housing Data
+================================================================================
+
+from sklearn.datasets import fetch_california_housing
+from sklearn.linear_model import Ridge, Lasso, ElasticNet, LinearRegression
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+import numpy as np
+import pandas as pd
+
+# Load housing data
+housing = fetch_california_housing()
+X, y = housing.data, housing.target
+
+print("California Housing Dataset:")
+print(f"  Samples: {X.shape[0]}, Features: {X.shape[1]}")
+print(f"  Target: Median house value (in $100,000s)")
+print(f"  Feature names: {housing.feature_names}")
+
+# Split and scale
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Define models
+models = {
+    'Linear Regression': LinearRegression(),
+    'Ridge (α=1.0)': Ridge(alpha=1.0),
+    'Ridge (α=10.0)': Ridge(alpha=10.0),
+    'Ridge (α=100.0)': Ridge(alpha=100.0),
+    'Lasso (α=0.01)': Lasso(alpha=0.01, max_iter=10000),
+    'Lasso (α=0.1)': Lasso(alpha=0.1, max_iter=10000),
+    'ElasticNet (α=0.01, ρ=0.5)': ElasticNet(alpha=0.01, l1_ratio=0.5, max_iter=10000),
+    'ElasticNet (α=0.1, ρ=0.5)': ElasticNet(alpha=0.1, l1_ratio=0.5, max_iter=10000),
+}
+
+# Train and evaluate
+print("\n" + "="*90)
+print(f"{'Model':<30} | {'Train MSE':<12} | {'Test MSE':<12} | {'Test MAE':<10} | {'Test R²':<8}")
+print("="*90)
+
+results = []
+for name, model in models.items():
+    model.fit(X_train_scaled, y_train)
+    
+    train_mse = mean_squared_error(y_train, model.predict(X_train_scaled))
+    test_mse = mean_squared_error(y_test, model.predict(X_test_scaled))
+    test_mae = mean_absolute_error(y_test, model.predict(X_test_scaled))
+    test_r2 = r2_score(y_test, model.predict(X_test_scaled))
+    
+    print(f"{name:<30} | {train_mse:<12.4f} | {test_mse:<12.4f} | {test_mae:<10.4f} | {test_r2:<8.4f}")
+    
+    results.append({
+        'model': name,
+        'train_mse': train_mse,
+        'test_mse': test_mse,
+        'test_r2': test_r2
+    })
+
+# Cross-validation comparison
+print("\n" + "="*90)
+print("5-Fold Cross-Validation R² Scores:")
+print("="*90)
+
+for name, model in [
+    ('Ridge (CV optimal)', RidgeCV(alphas=np.logspace(-4, 4, 100), cv=5)),
+    ('Lasso (CV optimal)', LassoCV(alphas=np.logspace(-4, 1, 100), cv=5, max_iter=10000)),
+    ('ElasticNet (CV optimal)', ElasticNetCV(
+        l1_ratio=[0.1, 0.3, 0.5, 0.7, 0.9],
+        alphas=np.logspace(-4, 1, 100), cv=5, max_iter=10000
+    ))
+]:
+    model.fit(X_train_scaled, y_train)
+    cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='r2')
+    print(f"{name:<30} | Best α={model.alpha_:.6f} | CV R²={cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
+    print(f"{'':30} | Test R²={r2_score(y_test, model.predict(X_test_scaled)):.4f}")
+
+================================================================================
+EXAMPLE 2: High-Dimensional Data (p >> n)
+================================================================================
+
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+import numpy as np
+
+# Generate high-dimensional data (more features than samples)
+np.random.seed(42)
+n, p = 50, 200  # 50 samples, 200 features
+
+X, y = make_regression(
+    n_samples=n, n_features=p,
+    n_informative=10,  # Only 10 true features
+    noise=10, random_state=42
+)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+print("High-Dimensional Data (n={}, p={})".format(n, p))
+print("Only {} features are truly informative".format(10))
+print("="*60)
+
+# Compare methods
+print("\nMethod      | Non-zero Coefs | Test R² | Notes")
+print("-"*60)
+
+# OLS (should fail or overfit)
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+print(f"OLS         | {np.sum(lr.coef_ != 0):>13} | {r2_score(y_test, lr.predict(X_test)):>7.4f} | Overfits!")
+
+# Ridge
+ridge = Ridge(alpha=1.0)
+ridge.fit(X_train, y_train)
+print(f"Ridge       | {np.sum(ridge.coef_ != 0):>13} | {r2_score(y_test, ridge.predict(X_test)):>7.4f} | All selected")
+
+# Lasso
+lasso = Lasso(alpha=0.1, max_iter=10000)
+lasso.fit(X_train, y_train)
+print(f"Lasso       | {np.sum(lasso.coef_ != 0):>13} | {r2_score(y_test, lasso.predict(X_test)):>7.4f} | Feature selection")
+
+# ElasticNet
+elastic = ElasticNet(alpha=0.1, l1_ratio=0.5, max_iter=10000)
+elastic.fit(X_train, y_train)
+print(f"ElasticNet  | {np.sum(elastic.coef_ != 0):>13} | {r2_score(y_test, elastic.predict(X_test)):>7.4f} | Balanced")
+
+# Check if Lasso selected the true important features
+print("\nLasso Feature Selection Analysis:")
+important = np.abs(lasso.coef_) > 0.1
+print(f"  Features selected: {np.sum(important)}")
+print(f"  True important features in data: 10")
+
+================================================================================
+EXAMPLE 3: Multicollinearity Handling
+================================================================================
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import Ridge, Lasso, LinearRegression
+from sklearn.datasets import make_regression
+from sklearn.model_selection import cross_val_score
+
+# Create data with multicollinearity
+np.random.seed(42)
+
+# Generate correlated features
+n = 100
+x1 = np.random.randn(n)
+x2 = x1 + 0.1*np.random.randn(n)  # Highly correlated with x1
+x3 = np.random.randn(n)
+x4 = 2*x2 - x1 + 0.1*np.random.randn(n)  # Linear combination
+
+X = np.column_stack([x1, x2, x3, x4])
+
+# True relationship: y = 3*x1 + 2*x3 + noise
+y = 3*x1 + 2*x3 + np.random.randn(n)*0.5
+
+print("Multicollinearity Example:")
+print("="*60)
+print("True relationship: y = 3*x1 + 2*x3 + noise")
+print("Note: x2 ≈ x1, x4 ≈ 2*x2 - x1 (redundant)")
+print()
+
+# Compare coefficient estimates
+lr = LinearRegression()
+lr.fit(X, y)
+print("OLS Coefficients:")
+for i, name in enumerate(['x1', 'x2', 'x3', 'x4']):
+    print(f"  {name}: {lr.coef_[i]:.4f}")
+print(f"  OLS instability: x2 coefficient wrong sign!")
+print()
+
+# Ridge with different alphas
+print("Ridge Coefficients (stable):")
+for alpha in [0.1, 1, 10, 100]:
+    ridge = Ridge(alpha=alpha)
+    ridge.fit(X, y)
+    print(f"  α={alpha:>4}: x1={ridge.coef_[0]:.4f}, x2={ridge.coef_[1]:.4f}, "
+          f"x3={ridge.coef_[2]:.4f}, x4={ridge.coef_[3]:.4f}")
+
+# Lasso for feature selection
+lasso = Lasso(alpha=0.1, max_iter=10000)
+lasso.fit(X, y)
+print(f"\nLasso (α=0.1) Coefficients:")
+for i, name in enumerate(['x1', 'x2', 'x3', 'x4']):
+    marker = "★" if lasso.coef_[i] != 0 else " "
+    print(f"  {marker} {name}: {lasso.coef_[i]:.4f}")
+print(f"  Lasso selected: x1, x3 (correct!)")
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+┌──────────────────┬────────────────┬────────────────┬─────────────────────┐
+│ Property          │ Ridge (L2)      │ Lasso (L1)     │ Elastic Net (L1+L2) │
+├──────────────────┼────────────────┼────────────────┼─────────────────────┤
+│ Penalty          │ Σwⱼ²           │ Σ|wⱼ|          │ ρΣ|wⱼ| +            │
+│                  │                │                │ (1-ρ)Σwⱼ²           │
+├──────────────────┼────────────────┼────────────────┼─────────────────────┤
+│ Solution         │ Closed form    │ No closed form │ No closed form      │
+│                  │ (X'X+λI)⁻¹X'y │ (iterative)    │ (iterative)         │
+├──────────────────┼────────────────┼────────────────┼─────────────────────┤
+│ Coefficients     │ Shrunk toward  │ Exact zero     │ Shrunk & some zero  │
+│                  │ zero          │ (sparse)       │ (grouped sparsity)  │
+├──────────────────┼────────────────┼────────────────┼─────────────────────┤
+│ Feature Selection│ No             │ Yes            │ Yes                 │
+├──────────────────┼────────────────┼────────────────┼─────────────────────┤
+│ Handles          │ Excellent      │ Good           │ Excellent           │
+│ Collinearity    │                │                │                     │
+├──────────────────┼────────────────┼────────────────┼─────────────────────┤
+│ Stable when      │ Always         │ May be unstable│ Stable              │
+│ p >> n          │                │ with correlated│                     │
+│                  │                │ features       │                     │
+├──────────────────┼────────────────┼────────────────┼─────────────────────┤
+│ Best for         │ All features   │ Few important  │ Correlated +        │
+│                  │ important      │ features       │ feature selection   │
+└──────────────────┴────────────────┴────────────────┴─────────────────────┘
+
+================================================================================
+                           END OF DOCUMENT
+================================================================================
