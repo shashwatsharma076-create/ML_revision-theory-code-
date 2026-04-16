@@ -1,0 +1,58 @@
+# Git Commands Quick Reference
+
+## Push Local File to GitHub - Step by Step
+
+```bash
+# 1. Navigate to repo
+cd /path/to/repo
+
+# 2. Pull latest changes
+git pull origin main
+
+# 3. Check status
+git status
+
+# 4. Add file to staging
+git add filename.txt
+
+# 5. Commit with message
+git commit -m "Your commit message here"
+
+# 6. Push to remote
+git push origin main
+
+# 7. Verify push
+git log --oneline -1
+```
+
+## Common Git Commands
+
+```bash
+# Check status
+git status
+
+# See changed files
+git diff
+
+# See commit history
+git log --oneline
+
+# Pull changes
+git pull origin main
+
+# Create new branch
+git checkout -b new-branch
+
+# Switch branch
+git checkout main
+
+# Merge branch
+git merge branch-name
+```
+
+## Your Repo: https://github.com/shashwatsharma076-create/ML_revision-theory-code-
+
+### Files Pushed So Far:
+1. Logistic_Regression_Complete_Guide.txt
+2. Regularization_Complete_Guide.txt  
+3. Regularization_Visual_Guide.txt
