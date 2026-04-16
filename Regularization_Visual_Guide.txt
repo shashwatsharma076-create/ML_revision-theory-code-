@@ -1,0 +1,966 @@
+================================================================================
+        LASSO, RIDGE & ELASTIC NET - VISUAL WORKFLOW GUIDE
+        Semantic Understanding with Diagrams & Code
+================================================================================
+
+================================================================================
+                    1. THE BIG PICTURE
+================================================================================
+
+                    ┌─────────────────────────────────────────────────┐
+                    │         YOUR MACHINE LEARNING PROBLEM           │
+                    └─────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+                    ┌─────────────────────────────────────────────────┐
+                    │            ARE YOU OVERFITTING?                 │
+                    │                                                 │
+                    │   • Training error: LOW                         │
+                    │   • Test error: HIGH  ← Problem!                │
+                    │   • Too many features / complex model           │
+                    └─────────────────────────────────────────────────┘
+                                        │
+                                        │ YES
+                                        ▼
+                    ┌─────────────────────────────────────────────────┐
+                    │            NEED REGULARIZATION!                  │
+                    │                                                 │
+                    │   Add penalty to cost function to:              │
+                    │   • Shrink large coefficients                   │
+                    │   • Prevent overfitting                         │
+                    │   • Improve generalization                      │
+                    └─────────────────────────────────────────────────┘
+                                        │
+                                        ▼
+                    ┌─────────────────────────────────────────────────┐
+                    │            CHOOSE YOUR WEAPON:                   │
+                    │                                                 │
+                    │   ┌─────────┐  ┌─────────┐  ┌─────────────────┐ │
+                    │   │  RIDGE  │  │  LASSO  │  │   ELASTIC NET   │ │
+                    │   │   (L2)  │  │   (L1)  │  │    (L1 + L2)   │ │
+                    │   └─────────┘  └─────────┘  └─────────────────┘ │
+                    └─────────────────────────────────────────────────┘
+
+================================================================================
+                    2. LINEAR REGRESSION WITHOUT REGULARIZATION
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   COST FUNCTION = Mean Squared Error                                │
+    │                                                                     │
+    │                    J(w) = (1/m) Σ (yᵢ - ŷᵢ)²                      │
+    │                                                                     │
+    │   where:                                                            │
+    │       ŷ = w · x + b                                                │
+    │                                                                     │
+    │   ┌─────────────────────────────────────────────────────────────┐  │
+    │   │                                                             │  │
+    │   │     Data Points        MSE Loss Surface                      │  │
+    │   │         ●                                              ▲     │  │
+    │   │        ● ●                                           ╱      │  │
+    │   │       ●   ●       ─────────────────────────────────╱       │  │
+    │   │      ●     ●      │                               ╱          │  │
+    │   │     ●───────●─────│────────────────────────────╱           │  │
+    │   │                   │                          ╱              │  │
+    │   │                  ●│                         ╱                │  │
+    │   │                                                             │  │
+    │   │     Unregularized fit      MSE increases away from min      │  │
+    │   │                                                             │  │
+    │   └─────────────────────────────────────────────────────────────┘  │
+    │                                                                     │
+    │   PROBLEM: Coefficients can become arbitrarily large!              │
+    │                                                                     │
+    │   w₁=1500, w₂=-800, w₃=2000 ...                                   │
+    │                                                                     │
+    │   This leads to:                                                   │
+    │   • Overfitting to training data                                   │
+    │   • Poor generalization                                            │
+    │   • Unstable predictions                                           │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. RIDGE REGRESSION (L2 PENALTY)
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ╔═══════════════════════════════════════════════════════════════╗ │
+    │   ║                    RIDGE REGRESSION                            ║ │
+    │   ╠═══════════════════════════════════════════════════════════════╣ │
+    │   ║                                                               ║ │
+    │   ║   COST = MSE + λ × (w₁² + w₂² + w₃² + ... + wₙ²)           ║ │
+    │   ║                                                               ║ │
+    │   ║   Penalizes: SUM OF SQUARED WEIGHTS                          ║ │
+    │   ║                                                               ║ │
+    │   ║   Effect: Coefficients SHRINK toward zero (but not zero!)    ║ │
+    │   ║                                                               ║ │
+    │   ╚═══════════════════════════════════════════════════════════════╝ │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 1: THE L2 CONSTRAINT (CIRCLE)
+    ─────────────────────────────────────────────────────────────────────
+
+         w₂ ▲
+            │                   Without Constraint:
+            │                   Solution can be anywhere
+            │                   in the loss surface
+            │                         ╱  ╲
+            │                       ╱ ╲╱  ╲    ← Loss contours
+            │                     ╱    ●    ╲
+            │                   ╱    ╱│╲    ╲
+            │                 ╱    ╱  │  ╲    ╲
+            │               ╱____╱___│___╲____╲
+            │                   ●
+            │               ●
+            │            ●
+            ├──────────────────────────────────────────► w₁
+           -3 -2 -1  0  1  2  3
+
+
+         w₂ ▲
+            │                   With L2 Constraint:
+            │                   Solution must be inside circle
+            │                         ╱  ╲
+            │                       ╱ ╲╱  ╲
+            │                     ╱    │    ╲
+            │                   ╱    ──┼───  ╲
+            │                 ╱        ●        ╲        ← Touches here
+            │               ╱      ╱     ╲      ╲
+            │             ╱______╱________╲______╲
+            │                   (circle)
+            ├──────────────────────────────────────────► w₁
+           -3 -2 -1  0  1  2  3
+
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 2: RIDGE SHRINKS COEFFICIENTS
+    ─────────────────────────────────────────────────────────────────────
+
+        Original Coefficients:        After Ridge (λ=10):
+        ┌─────────────────┐          ┌─────────────────┐
+        │ w₁: ████████████│ 1.5      │ w₁: ████████│ 0.9
+        │ w₂: ██████████│   1.2      │ w₂: ██████│     0.7
+        │ w₃: ████████████│ 1.4      │ w₃: ████████│ 0.8
+        │ w₄: █████████│   1.0      │ w₄: █████│     0.6
+        │ w₅: ████████│     0.8      │ w₅: ████│       0.4
+        └─────────────────┘          └─────────────────┘
+        
+        All reduced proportionally!    Sum of squares = λ
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 3: RIDGE WORKFLOW
+    ─────────────────────────────────────────────────────────────────────
+
+        ┌─────────────────────────────────────────────────────────────┐
+        │                     RIDGE WORKFLOW                           │
+        └─────────────────────────────────────────────────────────────┘
+
+                         INPUT DATA
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │  Calculate MSE Loss  │
+                    │  J = Σ(y-ŷ)²        │
+                    └─────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │   Add L2 Penalty    │
+                    │  λ × ||w||²₂       │
+                    └─────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │   Total Loss        │
+                    │  J + λΣwⱼ²         │
+                    └─────────────────────┘
+                              │
+                              ▼
+        ┌─────────────────────────────────────────────────────┐
+        │              CLOSED-FORM SOLUTION!                   │
+        │                                                      │
+        │     ŵ = (X'X + λI)⁻¹ X'y                          │
+        │                                                      │
+        │     Just matrix operations - no iteration needed!   │
+        └─────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                        OPTIMAL WEIGHTS
+                        (All shrunk toward 0)
+
+================================================================================
+                    4. LASSO REGRESSION (L1 PENALTY)
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ╔═══════════════════════════════════════════════════════════════╗ │
+    │   ║                   LASSO REGRESSION                             ║ │
+    │   ╠═══════════════════════════════════════════════════════════════╣ │
+    │   ║                                                               ║ │
+    │   ║   COST = MSE + λ × (|w₁| + |w₂| + |w₃| + ... + |wₙ|)        ║ │
+    │   ║                                                               ║ │
+    │   ║   Penalizes: SUM OF ABSOLUTE WEIGHTS                        ║ │
+    │   ║                                                               ║ │
+    │   ║   Effect: Coefficients become EXACTLY ZERO!                  ║ │
+    │   ║                                                               ║ │
+    │   ╚═══════════════════════════════════════════════════════════════╝ │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 1: THE L1 CONSTRAINT (DIAMOND)
+    ─────────────────────────────────────────────────────────────────────
+
+         w₂ ▲
+            │
+            │                     Loss Contours              Diamond
+            │                       ╱  ╲                  Constraint
+            │                     ╱ ╲╱  ╲                ╱      ╲
+            │                   ╱    ●    ╲              ╱        ╲
+            │                 ╱    ╱│╲    ╲            ╱   ◉     ╲
+            │               ╱    ╱  │  ╲    ╲        ╱          ╲
+            │             ╱____╱____│____╲____╲      ╱____________╲
+            │                              ────────────────────────
+            │                                    Solution touches
+            │                                    at CORNER!
+            ├──────────────────────────────────────────────────────► w₁
+           -3 -2 -1  0  1  2  3
+
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 2: WHY L1 CREATES SPARSITY (FEATURE SELECTION)
+    ─────────────────────────────────────────────────────────────────────
+
+        Diamond has SHARP CORNERS at axes!
+        
+             L2 (Circle)                      L1 (Diamond)
+             
+             Smooth - no corners              Sharp corners at axes
+             Touches smoothly                 Touches at corners first
+        
+        
+        When loss contour touches diamond at corner:
+        
+            ┌─────────────────────────────────────────────────────┐
+            │                                                     │
+            │           w₂                                         │
+            │            ▲                                         │
+            │            │                                         │
+            │            │     Loss contour touches at:             │
+            │            │     w₁ = 0  (CORNER!)                   │
+            │            │     w₂ = some value                      │
+            │            │                                         │
+            │     ●──────┼─────────── w₁                           │
+            │           ╱                                        │
+            │          ╱                                          │
+            │         ◉ ← Corner where w₁ = 0                    │
+            │        ╱                                            │
+            │       ╱                                             │
+            └───────┼────────────────────────────────────────────►
+                    │
+                    This coefficient becomes EXACTLY ZERO!
+                    → Feature is REMOVED from model
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 3: LASSO FEATURE SELECTION IN ACTION
+    ─────────────────────────────────────────────────────────────────────
+
+        Original Features: w₁ w₂ w₃ w₄ w₅ w₆ w₇ w₈ w₉ w₁₀
+        
+        After Lasso (λ=small):
+        
+        w₁: ████████ (kept)
+        w₂: ██        (kept)
+        w₃: 0         (removed!)
+        w₄: ██████████ (kept)
+        w₅: 0         (removed!)
+        w₆: ██        (kept)
+        w₇: 0         (removed!)
+        w₈: ██        (kept)
+        w₉: 0         (removed!)
+        w₁₀: ██████  (kept)
+        
+        Result: 6 features kept, 4 removed!
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 4: LASSO WORKFLOW
+    ─────────────────────────────────────────────────────────────────────
+
+        ┌─────────────────────────────────────────────────────────────┐
+        │                      LASSO WORKFLOW                         │
+        └─────────────────────────────────────────────────────────────┘
+
+                         INPUT DATA
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │   Calculate MSE      │
+                    │   J = Σ(y-ŷ)²       │
+                    └─────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │   Add L1 Penalty    │
+                    │   λ × ||w||₁        │
+                    └─────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │   Total Loss        │
+                    │   J + λΣ|wⱼ|       │
+                    └─────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────────────────────────────────────┐
+                    │           SOFT THRESHOLDING OPERATION           │
+                    │                                                  │
+                    │   ŵ = sign(ŵ) × max(0, |ŵ| - λ)                │
+                    │                                                  │
+                    │   Example: If original w = 5, λ = 2              │
+                    │           New w = sign(5) × max(0, 5-2)          │
+                    │                 = 1 × 3 = 3                    │
+                    │                                                  │
+                    │           If |w| ≤ λ: w becomes exactly 0!        │
+                    └─────────────────────────────────────────────────┘
+                              │
+                              ▼
+                        OPTIMAL WEIGHTS
+                        (Some EXACTLY ZERO)
+
+================================================================================
+                    5. ELASTIC NET (L1 + L2 COMBINATION)
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ╔═══════════════════════════════════════════════════════════════╗ │
+    │   ║                  ELASTIC NET REGRESSION                       ║ │
+    │   ╠═══════════════════════════════════════════════════════════════╣ │
+    │   ║                                                               ║ │
+    │   ║   COST = MSE + λ₁×|w| + λ₂×w²                                ║ │
+    │   ║                                                               ║ │
+    │   ║   Or equivalently:                                            ║ │
+    │   ║                                                               ║ │
+    │   ║   COST = MSE + λ × [ρ×|w| + (1-ρ)×w²]                        ║ │
+    │   ║                                                               ║ │
+    │   ║   Where ρ (l1_ratio) controls L1/L2 mix                       ║ │
+    │   ║                                                               ║ │
+    │   ╚═══════════════════════════════════════════════════════════════╝ │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 1: ELASTIC NET CONSTRAINT (ROUNDED DIAMOND)
+    ─────────────────────────────────────────────────────────────────────
+
+         w₂
+          ▲
+          │                 Loss        Elastic Net
+          │               Contours       Constraint
+          │                 ╱  ╲        ╱         ╲
+          │               ╱     ╲      ╱            ╲
+          │             ╱       ╲    ╱      ◉      ╲
+          │           ╱         ╲  ╱               ╲
+          │         ╱           ╲╱                  ╲
+          │       ╱                                   ╲
+          │     ╱                                       ╲
+          │   ╱___________________________________________╲
+          └──┼──────────────────────────────────────────────► w₁
+            0
+
+        Shape: Rounded diamond (between circle and sharp diamond)
+        
+        Benefits:
+        • Corners exist → can zero out features (like L1)
+        • Rounded edges → stable with correlated features (like L2)
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 2: RIDGE vs LASSO vs ELASTIC NET
+    ─────────────────────────────────────────────────────────────────────
+
+        RIDGE (L2):                          LASSO (L1):
+        ┌────────────────────┐               ┌────────────────────┐
+        │                    │               │                    │
+        │    ┌─────────┐     │               │        ╱╲         │
+        │   ╱         ╲     │               │       ╱  ╲        │
+        │  │           │    │               │      ╱    ╲       │
+        │   ╲    ●    ╱     │               │     ╱  ●   ╲      │
+        │    ╲         ╱    │               │    ╱        ╲    │
+        │     ╲       ╱      │               │   ╱          ╲  │
+        │      ╲     ╱       │               │  ╱            ╲ │
+        │       ╲   ╱        │               │                 │
+        │        ╲╱         │               │                    │
+        │         ●         │               │                     │
+        └────────────────────┘               └────────────────────┘
+        
+        All shrunk, none zero              Some exactly zero
+        Stable, no sparsity                Sparsity, unstable
+        with correlated                     with correlated
+        
+        
+        ELASTIC NET (L1 + L2):
+        ┌────────────────────┐
+        │                    │
+        │      ╱╲            │
+        │     ╱  ╲           │
+        │    ╱    ╲          │
+        │   ╱  ●   ╲         │
+        │  ╱        ╲        │
+        │ ╱          ╲       │
+        │              ╲     │
+        │               ╲    │
+        │                ●   │
+        └────────────────────┘
+        
+        Best of both worlds!
+        • Sparsity (like Lasso)
+        • Stability with correlations (like Ridge)
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 3: GROUPED FEATURE SELECTION
+    ─────────────────────────────────────────────────────────────────────
+
+        Scenario: 3 highly correlated features (x₁, x₂, x₃)
+        True relationship: y = x₁ + x₂ + x₃ + noise
+
+        RIDGE:     w₁ ≈ w₂ ≈ w₃ (all equally shrunk)
+                   ████████  ████████  ████████
+                   
+        LASSO:     w₁ ≠ 0,  w₂ = 0,   w₃ = 0
+        (unstable!) ████████  0         0
+                   (arbitrarily picks one!)
+                   
+        ELASTIC NET: w₁ ≠ 0,  w₂ ≠ 0,   w₃ ≠ 0
+        (grouped!)   ████████  ████████  ████████
+                     (selects ALL correlated together!)
+
+    ─────────────────────────────────────────────────────────────────────
+    VISUAL 4: ELASTIC NET WORKFLOW
+    ─────────────────────────────────────────────────────────────────────
+
+        ┌─────────────────────────────────────────────────────────────┐
+        │                    ELASTIC NET WORKFLOW                     │
+        └─────────────────────────────────────────────────────────────┘
+
+                         INPUT DATA
+                              │
+                              ▼
+                    ┌─────────────────────┐
+                    │   Calculate MSE      │
+                    └─────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────────────────────────────────────┐
+                    │          MIXED PENALTY                          │
+                    │                                                  │
+                    │   λ × [ρ × |w| + (1-ρ) × w²]                   │
+                    │                                                  │
+                    │   ρ = 0   → Pure Ridge (all L2)                 │
+                    │   ρ = 1   → Pure Lasso (all L1)                 │
+                    │   ρ = 0.5 → Equal mix                           │
+                    │                                                  │
+                    │   ┌─────────────────────────────────────┐      │
+                    │   │  l1_ratio parameter (ρ)              │      │
+                    │   │                                     │      │
+                    │   │  ρ=0      ρ=0.25   ρ=0.5   ρ=0.75 ρ=1      │
+                    │   │  Ridge    Elastic   Elastic  Elastic  Lasso  │
+                    │   │         Net      Net     Net            │
+                    │   └─────────────────────────────────────┘      │
+                    └─────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────────────────────────────────────┐
+                    │            ITERATIVE OPTIMIZATION                │
+                    │                                                  │
+                    │   Since |w| is not differentiable, use:          │
+                    │   • Coordinate Descent                           │
+                    │   •proximal Gradient Descent                     │
+                    │   • L-BFGS                                       │
+                    └─────────────────────────────────────────────────┘
+                              │
+                              ▼
+                        OPTIMAL WEIGHTS
+                        (Shrunk + Some Zero)
+
+================================================================================
+                    6. THE PARAMETER λ (ALPHA) EFFECT
+================================================================================
+
+    ─────────────────────────────────────────────────────────────────────
+    HOW λ AFFECTS COEFFICIENTS
+    ─────────────────────────────────────────────────────────────────────
+
+        λ = 0        λ = small      λ = medium      λ = large      λ = ∞
+        (OLS)         (mild)         (moderate)      (strong)       (all zero)
+        
+        │            │             │             │            │
+        ██████████  ████████    ██████       ████        0      w₁
+        █████████  ███████    █████       ███        0        w₂
+        ████████  ██████    ████       ██        0          w₃
+        ███████  █████    ███       ██        0            w₄
+        ██████  ████    ██       █        0              w₅
+
+        ↑ All          ↑ Some          ↑ More         ↑ Most       ↑ All
+          large         shrunk          shrunk         shrunk       zero
+
+
+    ─────────────────────────────────────────────────────────────────────
+    λ PATH (REGULARIZATION PATH)
+    ─────────────────────────────────────────────────────────────────────
+
+        Coefficient Value
+        │
+        │  w₁ ──────╲
+        │  w₂ ───────╲────────
+        │  w₃ ──────────╲───
+        │  w₄ ────────────╲────
+        │  w₅ ──────────────╲────────
+        │                           ╲
+        │                            ╲
+        │                             ╲──────────────→ λ (log scale)
+        │                            
+        │         λ increasing ──────────────►
+
+
+        As λ increases:
+        • Coefficients shrink toward zero
+        • Eventually all become exactly zero (for Lasso)
+        
+        Note: Features enter/exit at different λ values!
+
+    ─────────────────────────────────────────────────────────────────────
+    BIAS-VARIANCE TRADE-OFF
+    ─────────────────────────────────────────────────────────────────────
+
+              Error
+                │
+                │      ╱───\                                   
+                │     ╱     \                                   
+                │    ╱       \___                                
+                │   ╱             \                               
+           High │  ╱               \_____                        
+                │ ╱                     \____                   
+                │╱                           \_____              
+                │                                  \_____         
+                │                                        \___     
+             Low│                                             \    
+                └───────────────────────────────────────────────►
+                      Underfit          Optimal          Overfit
+                      
+                      High λ         Balanced          Low λ
+                      High Bias       Trade-off        High Variance
+                      Low Variance    Point            Low Bias
+
+
+================================================================================
+                    7. COMPLETE CODE WITH VISUALIZATIONS
+================================================================================
+
+"""
+LASSO, RIDGE & ELASTIC NET - VISUAL WORKFLOW DEMONSTRATION
+===========================================================
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+import warnings
+warnings.filterwarnings('ignore')
+
+
+def visualize_regularization_path():
+    """
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║     VISUAL: Regularization Path (Coefficient vs Lambda)     ║
+    ╚═══════════════════════════════════════════════════════════════╝
+    """
+    
+    np.random.seed(42)
+    n_samples, n_features = 100, 10
+    
+    # Generate data with sparse coefficients
+    X = np.random.randn(n_samples, n_features)
+    true_coef = np.array([3, -1.5, 0, 0, 2, 0, 0, 0, 1.5, 0])
+    y = X @ true_coef + np.random.randn(n_samples) * 0.5
+    
+    # Standardize
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # Compute regularization paths
+    alphas = np.logspace(-3, 2, 100)
+    
+    ridge_coefs = np.zeros((len(alphas), n_features))
+    lasso_coefs = np.zeros((len(alphas), n_features))
+    elastic_coefs = np.zeros((len(alphas), n_features))
+    
+    for i, alpha in enumerate(alphas):
+        ridge = Ridge(alpha=alpha)
+        ridge.fit(X_scaled, y)
+        ridge_coefs[i] = ridge.coef_
+        
+        lasso = Lasso(alpha=alpha, max_iter=10000)
+        lasso.fit(X_scaled, y)
+        lasso_coefs[i] = lasso.coef_
+        
+        elastic = ElasticNet(alpha=alpha, l1_ratio=0.5, max_iter=10000)
+        elastic.fit(X_scaled, y)
+        elastic_coefs[i] = elastic.coef_
+    
+    # Plot
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    
+    # Ridge
+    for i in range(n_features):
+        axes[0].plot(alphas, ridge_coefs[:, i], label=f'w{i+1}')
+    axes[0].set_xscale('log')
+    axes[0].set_xlabel('Alpha (λ)')
+    axes[0].set_ylabel('Coefficient Value')
+    axes[0].set_title('Ridge (L2) - All Shrunk, None Zero')
+    axes[0].axhline(y=0, color='k', linestyle='--', alpha=0.3)
+    
+    # Lasso
+    for i in range(n_features):
+        axes[1].plot(alphas, lasso_coefs[:, i], label=f'w{i+1}')
+    axes[1].set_xscale('log')
+    axes[1].set_xlabel('Alpha (λ)')
+    axes[1].set_ylabel('Coefficient Value')
+    axes[1].set_title('Lasso (L1) - Sparsity (Zeros!)')
+    axes[1].axhline(y=0, color='k', linestyle='--', alpha=0.3)
+    
+    # Elastic Net
+    for i in range(n_features):
+        axes[2].plot(alphas, elastic_coefs[:, i], label=f'w{i+1}')
+    axes[2].set_xscale('log')
+    axes[2].set_xlabel('Alpha (λ)')
+    axes[2].set_ylabel('Coefficient Value')
+    axes[2].set_title('Elastic Net (L1+L2) - Best of Both')
+    axes[2].axhline(y=0, color='k', linestyle='--', alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig('regularization_path.png', dpi=150)
+    plt.show()
+    
+    print("✓ Saved: regularization_path.png")
+
+
+def visualize_constraint_contours():
+    """
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║     VISUAL: L1 vs L2 Constraints (Contour Plots)              ║
+    ╚═══════════════════════════════════════════════════════════════╝
+    """
+    
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # Create grid
+    w1 = np.linspace(-3, 3, 100)
+    w2 = np.linspace(-3, 3, 100)
+    W1, W2 = np.meshgrid(w1, w2)
+    
+    # Loss surface (elliptical)
+    loss = W1**2 + W2**2 - 2*W1*W2*0.5  # Correlated features
+    
+    # L2 constraint (circle)
+    l2_constraint = W1**2 + W2**2
+    
+    # L1 constraint (diamond)
+    l1_constraint = np.abs(W1) + np.abs(W2)
+    
+    # Plot L2 constraint
+    axes[0].contourf(W1, W2, loss, levels=20, alpha=0.3)
+    axes[0].contour(W1, W2, loss, levels=15, colors='blue', alpha=0.5)
+    axes[0].contour(W1, W2, l2_constraint, levels=[1, 2, 5, 10], 
+                    colors='red', linewidths=2)
+    axes[0].scatter([0], [0], marker='*', s=200, c='green', 
+                    label='True min')
+    axes[0].scatter([1.2], [1.2], marker='o', s=100, c='red', 
+                    label='Ridge solution')
+    axes[0].set_xlabel('w₁')
+    axes[0].set_ylabel('w₂')
+    axes[0].set_title('Ridge (L2): Circle Constraint\nSmooth contact')
+    axes[0].legend()
+    axes[0].set_aspect('equal')
+    axes[0].grid(True, alpha=0.3)
+    
+    # Plot L1 constraint
+    axes[1].contourf(W1, W2, loss, levels=20, alpha=0.3)
+    axes[1].contour(W1, W2, loss, levels=15, colors='blue', alpha=0.5)
+    axes[1].contour(W1, W2, l1_constraint, levels=[1, 2, 3, 5], 
+                    colors='red', linewidths=2)
+    axes[1].scatter([0], [0], marker='*', s=200, c='green', 
+                    label='True min')
+    axes[1].scatter([0], [1.5], marker='o', s=100, c='red', 
+                    label='Lasso solution (sparse!)')
+    axes[1].set_xlabel('w₁')
+    axes[1].set_ylabel('w₂')
+    axes[1].set_title('Lasso (L1): Diamond Constraint\nContact at corner (w₁=0!)')
+    axes[1].legend()
+    axes[1].set_aspect('equal')
+    axes[1].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig('l1_l2_constraints.png', dpi=150)
+    plt.show()
+    
+    print("✓ Saved: l1_l2_constraints.png")
+
+
+def visualize_lambda_effect():
+    """
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║     VISUAL: Effect of Lambda on Training/Test Error            ║
+    ╚═══════════════════════════════════════════════════════════════╝
+    """
+    
+    np.random.seed(42)
+    n_samples = 100
+    n_features = 20
+    
+    # Generate data
+    X = np.random.randn(n_samples, n_features)
+    true_coef = np.random.randn(n_features)
+    true_coef[10:] = 0  # Sparse
+    y = X @ true_coef + np.random.randn(n_samples) * 2
+    
+    # Split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42
+    )
+    
+    # Scale
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+    
+    # Range of alphas
+    alphas = np.logspace(-4, 3, 50)
+    
+    train_errors = []
+    test_errors = []
+    n_nonzero = []
+    
+    for alpha in alphas:
+        lasso = Lasso(alpha=alpha, max_iter=10000)
+        lasso.fit(X_train, y_train)
+        
+        train_pred = lasso.predict(X_train)
+        test_pred = lasso.predict(X_test)
+        
+        train_mse = np.mean((y_train - train_pred) ** 2)
+        test_mse = np.mean((y_test - test_pred) ** 2)
+        
+        train_errors.append(train_mse)
+        test_errors.append(test_mse)
+        n_nonzero.append(np.sum(lasso.coef_ != 0))
+    
+    # Plot
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    
+    # Training/Test Error
+    axes[0].plot(alphas, train_errors, 'b-', label='Training Error', linewidth=2)
+    axes[0].plot(alphas, test_errors, 'r-', label='Test Error', linewidth=2)
+    axes[0].set_xscale('log')
+    axes[0].set_xlabel('Alpha (λ)')
+    axes[0].set_ylabel('MSE')
+    axes[0].set_title('Bias-Variance Trade-off')
+    axes[0].legend()
+    axes[0].grid(True, alpha=0.3)
+    
+    # Find best alpha
+    best_idx = np.argmin(test_errors)
+    best_alpha = alphas[best_idx]
+    axes[0].axvline(x=best_alpha, color='green', linestyle='--', 
+                    label=f'Best λ={best_alpha:.4f}')
+    axes[0].legend()
+    
+    # Number of non-zero coefficients
+    axes[1].plot(alphas, n_nonzero, 'g-', linewidth=2)
+    axes[1].set_xscale('log')
+    axes[1].set_xlabel('Alpha (λ)')
+    axes[1].set_ylabel('Number of Non-Zero Coefficients')
+    axes[1].set_title('Feature Selection Effect')
+    axes[1].grid(True, alpha=0.3)
+    axes[1].axvline(x=best_alpha, color='green', linestyle='--')
+    
+    # Combined view
+    axes[2].plot(alphas, train_errors, 'b-', label='Train MSE', linewidth=2)
+    axes[2].plot(alphas, test_errors, 'r-', label='Test MSE', linewidth=2)
+    axes[2].plot(alphas, np.array(n_nonzero) / max(n_nonzero) * max(test_errors),
+                 'g--', label='Non-zero (normalized)', linewidth=2)
+    axes[2].set_xscale('log')
+    axes[2].set_xlabel('Alpha (λ)')
+    axes[2].set_ylabel('Value')
+    axes[2].set_title('Combined View')
+    axes[2].legend()
+    axes[2].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig('lambda_effect.png', dpi=150)
+    plt.show()
+    
+    print(f"✓ Saved: lambda_effect.png")
+    print(f"  Best alpha: {best_alpha:.4f}")
+
+
+def workflow_diagram():
+    """
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║     SEMANTIC WORKFLOW: Choosing the Right Regularizer         ║
+    ╚═══════════════════════════════════════════════════════════════╝
+    """
+    
+    print("""
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                    REGULARIZATION DECISION TREE                     │
+    └─────────────────────────────────────────────────────────────────────┘
+    
+                                START
+                                  │
+                                  ▼
+                    ┌───────────────────────────────┐
+                    │  Are features correlated?      │
+                    └───────────────────────────────┘
+                                  │
+                    ┌─────────────┴─────────────┐
+                    │                           │
+                   YES                         NO
+                    │                           │
+                    ▼                           ▼
+        ┌───────────────────┐       ┌─────────────────────────┐
+        │ Need feature       │       │ Need feature selection? │
+        │ selection?          │       └─────────────────────────┘
+        └───────────────────┘                 │
+                    │               ┌───────┴───────┐
+           ┌────────┴────────┐     │               │
+           │                 │    YES             NO
+           ▼                ▼     │               │
+    ┌────────────┐   ┌────────────┐ │               ▼
+    │  ELASTIC   │   │    RIDGE    │ │        ┌───────────┐
+    │    NET     │   │    (L2)     │ │        │   RIDGE   │
+    └────────────┘   └────────────┘ │        │   (L2)    │
+                                     │        └───────────┘
+           ┌────────┐               │
+           │ LASSO   │               │
+           │ (L1)    │               │
+           └────────┘               │
+                                     │
+                                     ▼
+                           ┌─────────────────┐
+                           │   ELASTIC NET   │
+                           │   (try both!)   │
+                           └─────────────────┘
+    
+    
+    ════════════════════════════════════════════════════════════════════════
+    
+    QUICK REFERENCE:
+    
+    ┌────────────────┬────────────────────────────────────────────────────┐
+    │ Problem Type    │ Recommended Method                                 │
+    ├────────────────┼────────────────────────────────────────────────────┤
+    │ All features   │ Ridge (L2)                                          │
+    │ important      │                                                    │
+    ├────────────────┼────────────────────────────────────────────────────┤
+    │ Feature        │ Lasso (L1)                                         │
+    │ selection      │                                                    │
+    ├────────────────┼────────────────────────────────────────────────────┤
+    │ Correlated +   │ Elastic Net                                        │
+    │ selection      │                                                    │
+    ├────────────────┼────────────────────────────────────────────────────┤
+    │ p >> n         │ Elastic Net or Lasso                               │
+    │ (many features)│                                                    │
+    ├────────────────┼────────────────────────────────────────────────────┤
+    │ Grouped        │ Elastic Net                                        │
+    │ features       │                                                    │
+    ├────────────────┼────────────────────────────────────────────────────┤
+    │ Uncertain!     │ Use CV: LassoCV, RidgeCV, ElasticNetCV            │
+    └────────────────┴────────────────────────────────────────────────────┘
+    """)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MAIN EXECUTION
+# ═══════════════════════════════════════════════════════════════════════════
+
+if __name__ == "__main__":
+    
+    print("""
+    ════════════════════════════════════════════════════════════════════════
+                    LASSO, RIDGE & ELASTIC NET
+                    Visual Workflow Demonstration
+    ════════════════════════════════════════════════════════════════════════
+    """)
+    
+    # Run visualizations
+    print("\n[1/4] Generating Regularization Path...")
+    visualize_regularization_path()
+    
+    print("\n[2/4] Generating L1 vs L2 Constraint Visualization...")
+    visualize_constraint_contours()
+    
+    print("\n[3/4] Generating Lambda Effect Plot...")
+    visualize_lambda_effect()
+    
+    print("\n[4/4] Displaying Workflow Decision Tree...")
+    workflow_diagram()
+    
+    print("""
+    ════════════════════════════════════════════════════════════════════════
+                              SUMMARY
+    ════════════════════════════════════════════════════════════════════════
+    
+    RIDGE (L2):      Shrinks coefficients, keeps all features, stable
+    LASSO (L1):     Sets some to zero (feature selection), sparse
+    ELASTIC NET:    Combines both, best of both worlds
+    
+    Key Insight:
+    ───────────
+    • L1 (Lasso) = Diamond constraint → Corners create sparsity
+    • L2 (Ridge) = Circle constraint  → Smooth shrinkage
+    • Elastic Net = Rounded diamond   → Sparsity + Stability
+    
+    ════════════════════════════════════════════════════════════════════════
+    """)
+
+
+================================================================================
+                    8. QUICK REFERENCE CARD
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                     AT A GLANCE                                     │
+    ├─────────────────────────────────────────────────────────────────────┤
+    │                                                                     │
+    │   RIDGE          │   LASSO           │   ELASTIC NET               │
+    │   ───────────────│─── ──────────────│─── ──────────────────────── │
+    │   L2: w²         │   L1: |w|        │   L1 + L2 mix               │
+    │                   │                   │                             │
+    │   Closed form    │   Iterative      │   Iterative                 │
+    │   (X'X+λI)⁻¹X'y  │   Soft threshold │   Coordinate descent        │
+    │                   │                   │                             │
+    │   All shrunk     │   Some = 0       │   Shrunken + some = 0       │
+    │   None zero      │   (Sparsity!)    │   (Grouped sparsity!)       │
+    │                   │                   │                             │
+    │   Feature keep   │   Feature select │   Smart selection           │
+    │   all            │   (important)    │   (keep groups)             │
+    │                   │                   │                             │
+    │   Stable         │   Unstable with  │   Stable + sparse           │
+    │   with corr.     │   corr. features │                             │
+    │                   │                   │                             │
+    │   Best when:     │   Best when:     │   Best when:                │
+    │   • p small      │   • p large      │   • Correlated features      │
+    │   • All relevant │   • Few relevant │   • Need both               │
+    │                   │   │                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            END OF VISUAL GUIDE
+================================================================================
