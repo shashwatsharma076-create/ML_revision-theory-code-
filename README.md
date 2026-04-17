@@ -8,6 +8,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [Linear Regression](./notebooks/01_linear_regression.md) - Simple, Multiple, Polynomial
 - [Regularization](./Regularization_Complete_Guide.txt) ✅ - Ridge, Lasso, Elastic Net
 - [Logistic Regression](./Logistic_Regression_Complete_Guide.txt) ✅ - Binary, Multinomial, Ordinal
+- [Linear Discriminant Analysis (LDA)](./LDA_Complete_Guide.txt) ✅ - LDA, QDA, Fisher's Discriminant
 - [Decision Trees](./notebooks/03_decision_trees.md) (Coming Soon)
 - [Random Forests](./notebooks/04_random_forests.md) (Coming Soon)
 - [Support Vector Machines](./notebooks/05_svm.md) (Coming Soon)
@@ -69,3 +70,16 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 5. Bias-Variance Trade-off
 6. Cross-Validation for λ selection
 7. Implementation with sklearn
+
+## Linear Discriminant Analysis (LDA) Sub-topics ✅
+
+1. Introduction to LDA & Generative vs Discriminative Models
+2. Types of Discriminant Analysis (LDA, QDA, RDA)
+3. LDA Assumptions (Normality, Homoscedasticity)
+4. Bayes Theorem & Posterior Probability
+5. Mathematical Derivation (Step-by-Step)
+6. Decision Boundaries (Linear Hyperplane)
+7. Fisher's Linear Discriminant
+8. LDA for Dimensionality Reduction
+9. Regularized LDA with Shrinkage
+10. sklearn Implementation (Wine, Iris datasets)
