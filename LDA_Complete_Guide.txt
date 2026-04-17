@@ -1,0 +1,805 @@
+================================================================================
+                LINEAR DISCRIMINANT ANALYSIS (LDA)
+                Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                           TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to LDA
+2. Why LDA? ( vs Logistic Regression)
+3. Types of LDA
+   3.1 Linear Discriminant Analysis (LDA)
+   3.2 Quadratic Discriminant Analysis (QDA)
+   3.3 Regularized Discriminant Analysis (RDA)
+4. LDA Assumptions
+5. Mathematical Derivation
+   5.1 Bayes Theorem Recap
+   5.2 LDA Derivation (Step-by-Step)
+   5.3 Decision Boundaries
+6. Fisher's Linear Discriminant
+7. Implementation with sklearn
+8. Complete Code Examples
+9. Advantages and Disadvantages
+
+================================================================================
+                    1. INTRODUCTION TO LDA
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   LINEAR DISCRIMINANT ANALYSIS (LDA)                                │
+    │   ─────────────────────────────────────                              │
+    │                                                                     │
+    │   A SUPERVISED classification algorithm that finds LINEAR          │
+    │   combinations of features that best SEPARATE classes.            │
+    │                                                                     │
+    │   Key Idea: Project data onto a lower-dimensional space where      │
+    │             classes are MAXIMALLY separated.                        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+WHAT LDA DOES:
+
+    Original Space (2D, 2 classes)        LDA Projection (1D)
+    
+    Class 1: ● ● ●                       ────────────────────────────
+         ● ● ●                           Class 1      │     Class 2
+              ● ●                        ●●●●●●●     │     ●●●●●
+    ─────────────────────────────────   ────────────────────────────
+              ● ● ●                     
+         Class 2: ▲ ▲ ▲
+              ▲ ▲ ▲                      
+                      ▲ ▲                ↑
+                                      Decision boundary
+                                      (single point!)
+
+KEY CONCEPT:
+- LDA finds the best projection that maximizes "between-class variance"
+  while minimizing "within-class variance"
+
+================================================================================
+                    2. WHY LDA? (vs Logistic Regression)
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                      LDA vs LOGISTIC REGRESSION                   │
+    ├─────────────────────────────────────────────────────────────────────┤
+    │                                                                     │
+    │   LOGISTIC REGRESSION              │   LINEAR DISCRIMINANT        │
+    │   ─────────────────────            │   ANALYSIS (LDA)             │
+    │                                     │                             │
+    │   • Discriminative model           │   • Generative model        │
+    │   • Models P(y|x) directly         │   • Models P(x|y) first     │
+    │   • No assumptions on features     │   • Assumes normal dist.    │
+    │   • Works well with large n        │   • Works well with small n│
+    │   • Unstable with separated classes│   • Stable with separation  │
+    │   • Flexible decision boundary      │   • Linear decision boundary│
+    │                                     │                             │
+    └─────────────────────────────────────────────────────────────────────┘
+
+WHEN TO USE LDA:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│   USE LDA when:                                                            │
+│   ✓ Classes are normally distributed (Gaussian)                             │
+│   ✓ Features have same variance (homoscedasticity)                          │
+│   ✓ Limited training data                                                  │
+│   ✓ Classes are well-separated                                              │
+│   ✓ Need stable, robust classifier                                          │
+│   ✓ Dimensionality reduction before classification                           │
+│                                                                             │
+│   USE LOGISTIC REGRESSION when:                                             │
+│   ✓ Cannot assume Gaussian distribution                                     │
+│   ✓ Large dataset available                                                 │
+│   ✓ Need flexible decision boundaries                                        │
+│   ✓ Features have different variances                                        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. TYPES OF LDA
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │                    TYPES OF DISCRIMINANT ANALYSIS                   │
+    │                                                                     │
+    │    ┌─────────────────────────────────────────────────────────┐     │
+    │    │                                                         │     │
+    │    │     LINEAR DISCRIMINANT ANALYSIS (LDA)                 │     │
+    │    │     ───────────────────────────────────                │     │
+    │    │     • Linear decision boundary                         │     │
+    │    │     • Assumes ALL classes share same covariance matrix  │     │
+    │    │     • Projects onto (k-1) dimensional space             │     │
+    │    │                                                         │     │
+    │    └─────────────────────────────────────────────────────────┘     │
+    │                          │                                            │
+    │                          ▼                                            │
+    │    ┌─────────────────────────────────────────────────────────┐     │
+    │    │                                                         │     │
+    │    │     QUADRATIC DISCRIMINANT ANALYSIS (QDA)               │     │
+    │    │     ───────────────────────────────────                │     │
+    │    │     • Quadratic decision boundary                       │     │
+    │    │     • Each class has its OWN covariance matrix           │     │
+    │    │     • More flexible, but more parameters                 │     │
+    │    │                                                         │     │
+    │    └─────────────────────────────────────────────────────────┘     │
+    │                          │                                            │
+    │                          ▼                                            │
+    │    ┌─────────────────────────────────────────────────────────┐     │
+    │    │                                                         │     │
+    │    │     REGULARIZED DISCRIMINANT ANALYSIS (RDA)            │     │
+    │    │     ───────────────────────────────────                │     │
+    │    │     • Shrinks individual covariances toward pooled      │     │
+    │    │     • Balances between LDA and QDA                      │     │
+    │    │     • Two hyperparameters: α, γ                         │     │
+    │    │                                                         │     │
+    │    └─────────────────────────────────────────────────────────┘     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.1 LINEAR DISCRIMINANT ANALYSIS (LDA)
+────────────────────────────────────────
+
+    ASSUMPTION: All classes share the SAME covariance matrix Σ
+
+    Decision boundary is LINEAR because:
+    - Quadratic terms from covariance cancel out (Σ is same for all classes)
+
+    Complexity: k-1 discriminant functions for k classes
+
+3.2 QUADRATIC DISCRIMINANT ANALYSIS (QDA)
+────────────────────────────────────────
+
+    ASSUMPTION: Each class has its OWN covariance matrix Σₖ
+
+    Decision boundary is QUADRATIC because:
+    - Different covariances create quadratic terms
+
+    Complexity: k × (p(p+1)/2) additional parameters
+
+3.3 REGULARIZED DISCRIMINANT ANALYSIS (RDA)
+────────────────────────────────────────
+
+    COMBINES LDA and QDA through regularization
+
+    Σₖ(γ) = γ × Σₖ + (1-γ) × Σ (pooled covariance)
+    Σ(α) = α × Σ + (1-α) × λ × I
+
+    Parameters:
+    - α ∈ [0,1]: Pooling parameter (0=LDA, 1=QDA)
+    - γ ∈ [0,1]: Regularization (0=QDA, 1=LDA)
+
+================================================================================
+                    4. LDA ASSUMPTIONS
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                      LDA ASSUMPTIONS                               │
+    ├─────────────────────────────────────────────────────────────────────┤
+    │                                                                     │
+    │   1. INDEPENDENCE                                                   │
+    │      Observations must be independent of each other                 │
+    │                                                                     │
+    │   2. NORMAL DISTRIBUTION                                            │
+    │      Each class is normally distributed:                            │
+    │      X | Y=k ~ N(μₖ, Σ)                                           │
+    │                                                                     │
+    │   3. HOMOSCEDASTICITY                                               │
+    │      All classes have the SAME covariance matrix:                  │
+    │      Σ₁ = Σ₂ = ... = Σₖ = Σ                                       │
+    │                                                                     │
+    │   4. NO PERFECT COLLINEARITY                                        │
+    │      Features should not be perfectly correlated                   │
+    │                                                                     │
+    │   5. SAMPLE SIZE                                                    │
+    │      n > number of features for stable estimates                   │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+TESTING ASSUMPTIONS:
+
+    from scipy import stats
+    
+    # Test normality (Shapiro-Wilk)
+    for class_label in [0, 1]:
+        stat, p = stats.shapiro(X[y == class_label, feature_idx])
+        print(f"Class {class_label}: p={p:.4f}")
+    
+    # Test homogeneity of variance (Levene's test)
+    stat, p = stats.levene(*[X[y == k] for k in np.unique(y)])
+    print(f"Levene's test: p={p:.4f}")
+
+================================================================================
+                    5. MATHEMATICAL DERIVATION
+================================================================================
+
+5.1 BAYES THEOREM RECAP
+────────────────────────
+
+    P(y=k|x) = P(x|y=k) × P(y=k) / P(x)
+
+    Where:
+    - P(y=k|x) = Posterior probability (what we want!)
+    - P(x|y=k) = Likelihood (class-conditional density)
+    - P(y=k)   = Prior probability (class proportion)
+    - P(x)     = Evidence (normalizing constant)
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   For classification, we classify x to class k that maximizes:       │
+    │                                                                     │
+    │   P(y=k|x) ∝ P(x|y=k) × P(y=k)                                     │
+    │                                                                     │
+    │   Or equivalently, maximize the log-posterior:                       │
+    │                                                                     │
+    │   argmaxₖ [log P(x|y=k) + log P(y=k)]                             │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+5.2 LDA DERIVATION (STEP-BY-STEP)
+──────────────────────────────────
+
+STEP 1: Define the class-conditional density (Multivariate Normal)
+
+    P(x|y=k) = (1 / ((2π)^(p/2) |Σ|^(1/2))) × exp(-0.5 × (x-μₖ)' Σ⁻¹ (x-μₖ))
+
+    Where:
+    - p = number of features
+    - μₖ = mean vector for class k
+    - Σ = common covariance matrix
+
+STEP 2: Take the log of the likelihood
+
+    log P(x|y=k) = -0.5 × log|Σ| - 0.5 × (x-μₖ)' Σ⁻¹ (x-μₖ) + C
+
+    Where C = -0.5 × p × log(2π) is constant (same for all classes)
+
+STEP 3: Expand the quadratic term
+
+    (x-μₖ)' Σ⁻¹ (x-μₖ) = x' Σ⁻¹ x - 2μₖ' Σ⁻¹ x + μₖ' Σ⁻¹ μₖ
+
+    Since x' Σ⁻¹ x is same for all classes (independent of k):
+    log P(x|y=k) = -0.5 × μₖ' Σ⁻¹ μₖ + μₖ' Σ⁻¹ x + log P(y=k) + constant
+
+STEP 4: Define the discriminant function δₖ(x)
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   δₖ(x) = μₖ' Σ⁻¹ x - 0.5 × μₖ' Σ⁻¹ μₖ + log P(y=k)             │
+    │                                                                     │
+    │   Classification rule:                                              │
+    │   x belongs to class k if δₖ(x) > δⱼ(x) for all j ≠ k          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+STEP 5: Estimate parameters from training data
+
+    PRIOR PROBABILITY:
+    P(y=k) = nₖ / n
+    (proportion of class k in training data)
+
+    CLASS MEAN:
+    μₖ = (1/nₖ) × Σᵢ∈class k xᵢ
+
+    COMMON COVARIANCE:
+    Σ = (1/n) × Σₖ Σᵢ∈class k (xᵢ - μₖ)(xᵢ - μₖ)'
+
+STEP 6: Decision boundary between class k and ℓ
+
+    Set δₖ(x) = δℓ(x):
+
+    μₖ' Σ⁻¹ x - 0.5 μₖ' Σ⁻¹ μₖ + log P(y=k)
+    = μℓ' Σ⁻¹ x - 0.5 μℓ' Σ⁻¹ μℓ + log P(y=ℓ)
+
+    Rearranging:
+    (μₖ - μℓ)' Σ⁻¹ x = 0.5 × (μₖ' Σ⁻¹ μₖ - μℓ' Σ⁻¹ μℓ) + log P(y=k) - log P(y=ℓ)
+
+    This is a LINEAR equation in x! (Hence "Linear" Discriminant Analysis)
+
+5.3 DECISION BOUNDARIES
+───────────────────────
+
+FOR 2 CLASSES (k=2):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Decision boundary: w'x + b = 0                                    │
+    │                                                                     │
+    │   Where:                                                            │
+    │   w = Σ⁻¹ (μ₁ - μ₂)          (weight vector)                     │
+    │   b = -0.5 × (μ₁ + μ₂)' Σ⁻¹ (μ₁ - μ₂) + log(P₁/P₂)             │
+    │                                                                     │
+    │   This is a HYPERPLANE in p-dimensional space                      │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+GEOMETRIC INTERPRETATION:
+
+    w = Σ⁻¹ (μ₁ - μ₂)
+    
+    This means:
+    1. Direction w maximizes separation between class means
+    2. Normalized by the common covariance Σ
+    3. Projects data onto line perpendicular to decision boundary
+
+================================================================================
+                    6. FISHER'S LINEAR DISCRIMINANT
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   FISHER'S LINEAR DISCRIMINANT = LDA (when assumptions hold)      │
+    │                                                                     │
+    │   Goal: Find projection w that MAXIMIZES between-class variance    │
+    │                          relative to within-class variance          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+DEFINITIONS:
+
+    WITHIN-CLASS VARIANCE:
+    S²_w = Σₖ Σᵢ∈class k (yᵢ - μₖ)²
+
+    WHERE:
+    yᵢ = w'xᵢ (projection of xᵢ onto w)
+    μₖ = mean projection for class k
+
+    BETWEEN-CLASS VARIANCE:
+    S²_B = Σₖ nₖ (μₖ - μ)²
+
+    WHERE:
+    μ = overall mean of projected points
+
+FISHER'S CRITERION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   J(w) = S²_B / S²_w                                              │
+    │                                                                     │
+    │   Maximize J(w) → Find direction that best separates classes       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+SOLUTION:
+
+    w ∝ Σ⁻¹ (μ₁ - μ₂)
+
+    This is EXACTLY the same as LDA!
+
+    Proof:
+    For 2 classes, maximizing Fisher's criterion gives the same w as LDA
+    when data is normally distributed with equal covariances.
+
+================================================================================
+                    7. IMPLEMENTATION WITH SKLEARN
+================================================================================
+
+from sklearn.discriminant_analysis import (
+    LinearDiscriminantAnalysis,    # LDA
+    QuadraticDiscriminantAnalysis, # QDA
+)
+
+from sklearn.datasets import load_iris, load_wine
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix
+
+BASIC USAGE:
+
+    # Load data
+    X, y = load_iris(return_X_y=True)
+    
+    # Split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42
+    )
+    
+    # Create and train LDA
+    lda = LinearDiscriminantAnalysis()
+    lda.fit(X_train, y_train)
+    
+    # Predict
+    y_pred = lda.predict(X_test)
+    y_pred_proba = lda.predict_proba(X_test)
+    
+    # Evaluate
+    print(classification_report(y_test, y_pred))
+
+LDA PARAMETERS:
+
+    LinearDiscriminantAnalysis(
+        solver='svd',           # 'svd', 'lsqr', 'eigen'
+        shrinkage=None,         # None or float (0-1)
+        n_components=None,      # Number of components (< n_classes - 1)
+        priors=None,            # Class priors
+        covariance_estimator=None
+    )
+
+SOLVER OPTIONS:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│   'svd' (Singular Value Decomposition):                                    │
+│   • Default and recommended                                                 │
+│   • Works for all datasets                                                  │
+│   • Cannot use shrinkage with this solver                                   │
+│   • Fast for large datasets                                                 │
+│                                                                             │
+│   'lsqr' (Least Squares):                                                  │
+│   • Supports shrinkage                                                      │
+│   • Good for ill-posed problems                                             │
+│                                                                             │
+│   'eigen' (Eigenvalue Decomposition):                                      │
+│   • Supports shrinkage                                                      │
+│   • Can be slower                                                            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    8. COMPLETE CODE EXAMPLES
+================================================================================
+
+================================================================================
+EXAMPLE 1: Basic LDA Classification
+================================================================================
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.datasets import load_wine
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import (
+    classification_report, confusion_matrix, 
+    accuracy_score, roc_auc_score
+)
+import numpy as np
+
+print("="*70)
+print("EXAMPLE 1: Basic LDA Classification - Wine Dataset")
+print("="*70)
+
+# Load wine dataset (3 classes)
+wine = load_wine()
+X, y = wine.data, wine.target
+feature_names = wine.feature_names
+class_names = wine.target_names
+
+print(f"\nDataset: Wine ({X.shape[0]} samples, {X.shape[1]} features)")
+print(f"Classes: {list(class_names)}")
+print(f"Class distribution: {np.bincount(y)}")
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+
+# Train LDA
+lda = LinearDiscriminantAnalysis()
+lda.fit(X_train, y_train)
+
+# Predict
+y_pred = lda.predict(X_test)
+y_pred_proba = lda.predict_proba(X_test)
+
+# Evaluate
+accuracy = accuracy_score(y_test, y_pred)
+print(f"\nTest Accuracy: {accuracy:.4f}")
+
+# Cross-validation
+cv_scores = cross_val_score(lda, X, y, cv=5)
+print(f"5-Fold CV Accuracy: {cv_scores.mean():.4f} (+/- {cv_scores.std()*2:.4f})")
+
+# Confusion Matrix
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# Classification Report
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=class_names))
+
+# LDA properties
+print("\nLDA Properties:")
+print(f"  Number of components: {lda.n_components_}")
+print(f"  Number of classes: {len(np.unique(y))}")
+print(f"  Max components possible: {len(np.unique(y)) - 1}")
+
+================================================================================
+EXAMPLE 2: LDA for Dimensionality Reduction
+================================================================================
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+
+print("\n" + "="*70)
+print("EXAMPLE 2: LDA for Dimensionality Reduction - Iris Dataset")
+print("="*70)
+
+# Load data
+iris = load_iris()
+X, y = iris.data, iris.target
+species = iris.target_names
+
+# LDA for dimensionality reduction (keep 2 components)
+lda_2d = LinearDiscriminantAnalysis(n_components=2)
+X_lda = lda_2d.fit_transform(X, y)
+
+print(f"\nOriginal dimensions: {X.shape[1]}")
+print(f"Reduced dimensions: {X_lda.shape[1]}")
+print(f"Explained variance ratio: {lda_2d.explained_variance_ratio_}")
+print(f"Total variance explained: {sum(lda_2d.explained_variance_ratio_):.4f}")
+
+# Train classifier on reduced data
+X_train_lda, X_test_lda, y_train, y_test = train_test_split(
+    X_lda, y, test_size=0.3, random_state=42
+)
+
+lda_classifier = LinearDiscriminantAnalysis()
+lda_classifier.fit(X_train_lda, y_train)
+
+accuracy_reduced = lda_classifier.score(X_test_lda, y_test)
+print(f"\nAccuracy with 2D LDA: {accuracy_reduced:.4f}")
+
+# Compare with full data
+X_train_full, X_test_full, _, _ = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+lda_full = LinearDiscriminantAnalysis()
+lda_full.fit(X_train_full, y_train)
+accuracy_full = lda_full.score(X_test_full, y_test)
+print(f"Accuracy with full features: {accuracy_full:.4f}")
+
+# Visualize LDA projection
+print("\n(Note: Visualization code saved - run separately)")
+print(f"LDA component 1 range: [{X_lda[:,0].min():.2f}, {X_lda[:,0].max():.2f}]")
+print(f"LDA component 2 range: [{X_lda[:,1].min():.2f}, {X_lda[:,1].max():.2f}]")
+
+================================================================================
+EXAMPLE 3: LDA vs QDA vs Logistic Regression
+================================================================================
+
+from sklearn.discriminant_analysis import (
+    LinearDiscriminantAnalysis,
+    QuadraticDiscriminantAnalysis
+)
+from sklearn.linear_model import LogisticRegression
+from sklearn.datasets import make_classification, make_blobs
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
+print("\n" + "="*70)
+print("EXAMPLE 3: Comparing LDA, QDA, and Logistic Regression")
+print("="*70)
+
+# Generate different types of data
+
+# Case 1: Well-separated classes (equal covariance)
+X1, y1 = make_blobs(
+    n_samples=[100, 100, 100], 
+    centers=[[0,0], [3,0], [1.5,3]],
+    random_state=42
+)
+
+# Case 2: Unequal covariance (QDA should be better)
+X2, y2 = make_blobs(
+    n_samples=[100, 100], 
+    centers=[[0,0], [2,2]],
+    covariances=[[[1,0],[0,1]], [[4,0],[0,0.5]]],
+    random_state=42
+)
+
+datasets = [
+    ("Equal Covariance", X1, y1),
+    ("Unequal Covariance", X2, y2)
+]
+
+for name, X, y in datasets:
+    print(f"\n--- {name} ---")
+    
+    # Standardize
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # Models
+    models = {
+        'LDA': LinearDiscriminantAnalysis(),
+        'QDA': QuadraticDiscriminantAnalysis(),
+        'Logistic': LogisticRegression()
+    }
+    
+    print(f"  {'Model':<12} | {'CV Accuracy':>12}")
+    print("  " + "-"*28)
+    
+    for model_name, model in models.items():
+        scores = cross_val_score(model, X_scaled, y, cv=5)
+        print(f"  {model_name:<12} | {scores.mean():>10.4f} (+/- {scores.std():.4f})")
+
+================================================================================
+EXAMPLE 4: Regularized LDA with Shrinkage
+================================================================================
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.datasets import make_classification
+from sklearn.model_selection import GridSearchCV
+import numpy as np
+
+print("\n" + "="*70)
+print("EXAMPLE 4: Regularized LDA with Optimal Shrinkage")
+print("="*70)
+
+# Generate high-dimensional data (p > n scenario)
+np.random.seed(42)
+n, p = 50, 30  # 50 samples, 30 features (p > n!)
+X, y = make_classification(
+    n_samples=n, n_features=p,
+    n_informative=5, n_redundant=5,
+    n_classes=2, random_state=42
+)
+
+print(f"\nDataset: {n} samples, {p} features (p > n!)")
+
+# Without shrinkage (may fail or be unstable)
+try:
+    lda_no_shrink = LinearDiscriminantAnalysis()
+    scores_no_shrink = cross_val_score(lda_no_shrink, X, y, cv=5)
+    print(f"LDA (no shrinkage): {scores_no_shrink.mean():.4f}")
+except Exception as e:
+    print(f"LDA (no shrinkage): Failed - {e}")
+
+# With shrinkage (automatic Ledoit-Wolf)
+lda_shrink = LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto')
+scores_shrink = cross_val_score(lda_shrink, X, y, cv=5)
+print(f"LDA (auto shrinkage): {scores_shrink.mean():.4f}")
+
+# Grid search for optimal shrinkage
+param_grid = {'shrinkage': np.arange(0, 1, 0.1)}
+grid_search = GridSearchCV(
+    LinearDiscriminantAnalysis(solver='lsqr'),
+    param_grid, cv=5
+)
+grid_search.fit(X, y)
+print(f"Best shrinkage: {grid_search.best_params_['shrinkage']:.1f}")
+print(f"Best CV accuracy: {grid_search.best_score_:.4f}")
+
+================================================================================
+EXAMPLE 5: Multi-class LDA Decision Boundaries
+================================================================================
+
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.datasets import load_iris
+import numpy as np
+
+print("\n" + "="*70)
+print("EXAMPLE 5: Multi-class LDA (3 classes)")
+print("="*70)
+
+# Load iris dataset
+iris = load_iris()
+X = iris.data[:, [0, 1]]  # Use first 2 features for visualization
+y = iris.target
+
+# Train LDA
+lda = LinearDiscriminantAnalysis()
+lda.fit(X, y)
+
+# Decision boundaries
+print("\nDecision Boundaries (pairwise):")
+print("-" * 50)
+
+classes = np.unique(y)
+for i, c1 in enumerate(classes):
+    for c2 in classes[i+1:]:
+        mask = (y == c1) | (y == c2)
+        X_pair = X[mask]
+        y_pair = y[mask]
+        
+        lda_pair = LinearDiscriminantAnalysis()
+        lda_pair.fit(X_pair, y_pair)
+        
+        # Decision boundary: w'x + b = 0
+        w = lda_pair.coef_[0]
+        b = lda_pair.intercept_[0]
+        
+        print(f"\nClass {c1} vs Class {c2}:")
+        print(f"  w = [{w[0]:.4f}, {w[1]:.4f}]")
+        print(f"  b = {b:.4f}")
+        print(f"  Accuracy: {lda_pair.score(X_pair, y_pair):.4f}")
+
+# Coefficients for each class
+print("\n\nLDA Coefficients (for all 3 classes):")
+print("-" * 50)
+print(f"{'Feature':<15} | {'Class 0':>10} | {'Class 1':>10} | {'Class 2':>10}")
+print("-" * 50)
+for i, name in enumerate(iris.feature_names[:2]):
+    print(f"{name:<15} | {lda.coef_[0][i]:>10.4f} | {lda.coef_[1][i]:>10.4f} | {lda.coef_[2][i]:>10.4f}")
+
+print(f"\n{'Intercept':<15} | {lda.intercept_[0]:>10.4f} | {lda.intercept_[1]:>10.4f} | {lda.intercept_[2]:>10.4f}")
+
+================================================================================
+                    9. ADVANTAGES AND DISADVANTAGES
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ADVANTAGES OF LDA                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ✓ INTERPRETABILITY                                                       │
+│     • Clear probabilistic interpretation                                    │
+│     • Coefficients show feature importance                                  │
+│                                                                             │
+│   ✓ DIMENSIONALITY REDUCTION                                                │
+│     • Natural reduction to k-1 dimensions                                    │
+│     • Preserves class separability                                          │
+│                                                                             │
+│   ✓ ROBUST TO OVERFITTING                                                   │
+│     • Closed-form solution                                                    │
+│     • Works well with small sample sizes                                     │
+│                                                                             │
+│   ✓ HANDLES MULTI-CLASS NATURALLY                                          │
+│     • No need for One-vs-Rest strategy                                      │
+│                                                                             │
+│   ✓ FAST INFERENCE                                                          │
+│     • Simple linear algebra operations                                      │
+│                                                                             │
+│   ✓ PROBABILISTIC OUTPUT                                                    │
+│     • Gives class probabilities, not just predictions                       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        DISADVANTAGES OF LDA                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ✗ LINEAR ASSUMPTION                                                       │
+│     • Only finds linear decision boundaries                                 │
+│     • May fail if true boundaries are non-linear                           │
+│                                                                             │
+│   ✗ NORMALITY ASSUMPTION                                                    │
+│     • Requires Gaussian distribution per class                            │
+│     • May not hold in practice                                              │
+│                                                                             │
+│   ✗ HOMOSCEDASTICITY                                                        │
+│     • Assumes equal covariance across classes                              │
+│     • QDA or other methods needed if violated                              │
+│                                                                             │
+│   ✗ PARAMETRIC                                                              │
+│     • Requires estimating μₖ and Σ                                          │
+│     • May be unstable when p is large relative to n                        │
+│                                                                             │
+│   ✗ FEATURE SELECTION                                                       │
+│     • Doesn't perform feature selection inherently                          │
+│     • Use regularization or other methods                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    SUMMARY
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   LINEAR DISCRIMINANT ANALYSIS (LDA)                                 │
+    │   ════════════════════════════════                                  │
+    │                                                                     │
+    │   WHAT IT DOES:                                                     │
+    │   Finds linear combination of features that best separates classes   │
+    │                                                                     │
+    │   KEY FORMULA:                                                      │
+    │   δₖ(x) = μₖ' Σ⁻¹ x - 0.5 μₖ' Σ⁻¹ μₖ + log P(y=k)                │
+    │                                                                     │
+    │   DECISION BOUNDARY:                                                │
+    │   Linear hyperplane: w'x + b = 0                                   │
+    │                                                                     │
+    │   WHERE:                                                            │
+    │   w = Σ⁻¹ (μ₁ - μ₂)                                                │
+    │                                                                     │
+    │   RELATIONSHIP:                                                     │
+    │   LDA ≈ Fisher's Discriminant (when Gaussian assumptions hold)       │
+    │   LDA = Bayesian classifier with Gaussian + shared covariance       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================
