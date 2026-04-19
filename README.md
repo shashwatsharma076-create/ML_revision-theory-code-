@@ -9,6 +9,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [Regularization](./Regularization_Complete_Guide.txt) ✅ - Ridge, Lasso, Elastic Net
 - [Logistic Regression](./Logistic_Regression_Complete_Guide.txt) ✅ - Binary, Multinomial, Ordinal
 - [Linear Discriminant Analysis (LDA)](./LDA_Complete_Guide.txt) ✅ - LDA, QDA, Fisher's Discriminant
+- [K-Nearest Neighbors (KNN)](./KNN_Complete_Guide.txt) ✅ - Classification, Regression, Distance Metrics
 - [Decision Trees](./notebooks/03_decision_trees.md) (Coming Soon)
 - [Random Forests](./notebooks/04_random_forests.md) (Coming Soon)
 - [Support Vector Machines](./notebooks/05_svm.md) (Coming Soon)
@@ -83,3 +84,16 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 8. LDA for Dimensionality Reduction
 9. Regularized LDA with Shrinkage
 10. sklearn Implementation (Wine, Iris datasets)
+
+## K-Nearest Neighbors (KNN) Sub-topics ✅
+
+1. Introduction to KNN (Lazy Learning)
+2. How KNN Works (Step-by-Step Algorithm)
+3. Distance Metrics (Euclidean, Manhattan, Minkowski, Cosine)
+4. Distance-Weighted KNN
+5. Derivation from Bayes Theorem
+6. Choosing Optimal K (Cross-Validation)
+7. Curse of Dimensionality
+8. KNN for Classification (Majority Vote)
+9. KNN Regression (Mean/Weighted Mean)
+10. sklearn Implementation (Iris, Breast Cancer datasets)
