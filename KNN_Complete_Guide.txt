@@ -1,0 +1,861 @@
+================================================================================
+                K-NEAREST NEIGHBORS (KNN)
+                Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                           TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to KNN
+2. How KNN Works
+3. Mathematical Foundation
+   3.1 Distance Metrics
+   3.2 Distance Weighted KNN
+   3.3 Derivation from Bayes Theorem
+4. Choosing Optimal K
+5. Curse of Dimensionality
+6. KNN for Classification vs Regression
+7. Implementation with sklearn
+8. Complete Code Examples
+
+================================================================================
+                    1. INTRODUCTION TO KNN
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   K-NEAREST NEIGHBORS (KNN)                                         │
+    │   ─────────────────────────────                                      │
+    │                                                                     │
+    │   A SIMPLE, INSTANCE-BASED learning algorithm that makes             │
+    │   predictions based on the K most similar training examples.      │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KEY CHARACTERISTICS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  ✓ LAZY LEARNING                                                   │
+    │    No explicit model training!                                    │
+    │    All computation happens at prediction time                    │
+    │                                                                     │
+    │  ✓ INSTANCE-BASED                                                 │
+    │    Stores entire training dataset                                 │
+    │    Learns by memorization                                        │
+    │                                                                     │
+    │  ✓ NON-PARAMETRIC                                                 │
+    │    Makes no assumptions about data distribution                    │
+    │    Can learn any decision boundary                               │
+    │                                                                     │
+    │  ✓ LOCAL LEARNING                                                │
+    │    Decision depends on local neighborhood                         │
+    │    Works well with complex patterns                               │
+    └─────────────────────────────────────────────────────────────────────┘
+
+HOW KNN WORKS (VISUAL):
+
+    Query point: ★
+    
+    K = 3 neighbors:
+    
+    Class A: ● ● ●
+             │
+    Class B: ▲ ▲ ▲    ← ★ would be classified as B
+                     (2 B vs 1 A)
+    
+    ───────────────────────────────────────────────
+    
+    The algorithm:
+    1. Calculate distance from query point to ALL training points
+    2. Find K nearest neighbors
+    3. Vote (or weight) their labels
+    4. Assign most common label to query point
+
+================================================================================
+                    2. HOW KNN WORKS
+================================================================================
+
+STEP-BY-STEP ALGORITHM:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   INPUT:  Training data (X_train, y_train)                         │
+    │           Query point x_q                                           │
+    │           K (number of neighbors)                                   │
+    │                                                                     │
+    │   OUTPUT: Predicted label y_q                                       │
+    │                                                                     │
+    │   STEPS:                                                          │
+    │   ─────────────────────────────────────────────────────────────         │
+    │   1. FOR each training point x_i in X_train:                      │
+    │        → Calculate distance d(x_q, x_i)                           │
+    │                                                                     │
+    │   2. FIND K nearest neighbors with smallest distances             │
+    │                                                                     │
+    │   3. FOR each neighbor:                                           │
+    │        → Get its label y_i                                          │
+    │                                                                     │
+    │   4. PREDICT:                                                    │
+    │        → For classification: majority vote                           │
+    │        → For regression: mean (or weighted mean)                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KNN CLASSIFICATION (MAJORITY VOTE):
+
+    Example: K = 5
+    
+    Nearest 5 neighbors: [A, A, B, A, B]
+    
+    Vote: A = 3, B = 2
+    
+    Prediction: Class A (majority!)
+    
+    Tie-breaking strategies:
+    • Use odd K to avoid ties
+    • Weight by distance (nearby neighbors count more)
+    • Use cross-validation to choose K
+
+KNN REGRESSION (MEAN/WEIGHTED MEAN):
+
+    Example: K = 5
+    
+    Nearest 5 neighbor values: [10, 12, 11, 13, 25]
+    
+    Simple mean: (10+12+11+13+25)/5 = 14.2
+    
+    Distance weights: w_i = 1/d_i
+    
+    Weighted mean: Σ(w_i × y_i) / Σ(w_i)
+
+================================================================================
+                    3. MATHEMATICAL FOUNDATION
+================================================================================
+
+3.1 DISTANCE METRICS
+────────────────────
+
+┌─────────────────────────────────────────────���───────────────────────┐
+│                                                                     │
+│   MOST COMMON DISTANCE METRICS:                                       │
+│                                                                     │
+│   1. EUCLIDEAN (L2):                                              │
+│                                                                      │
+│      d(x, y) = √[Σⱼ (xⱼ - yⱼ)²]                                  │
+│                                                                     │
+│   2. MANHATTAN (L1):                                              │
+│                                                                      │
+│      d(x, y) = Σⱼ |xⱼ - yⱼ|                                   │
+│                                                                     │
+│   3. MINKOWSKI (Lp):                                               │
+│                                                                      │
+│      d(x, y) = [Σⱼ |xⱼ - yⱼ|^p]^(1/p)                           │
+│                                                                     │
+│   4. HAMMING (for categorical):                                      │
+│                                                                      │
+│      d(x, y) = Σⱼ [xⱼ ≠ yⱼ]                                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+EUCLIDEAN DISTANCE:
+    
+    In 2D:        √[(x₁-x₂)² + (y₁-y₂)²]
+    
+    Example:       Point A(0,0), Point B(3,4)
+                  d = √[(3-0)² + (4-0)²]
+                  d = √[9 + 16]
+                  d = √25 = 5
+
+
+MANHATTAN DISTANCE (L1):
+    
+    In 2D:        |x₁-x₂| + |y₁-y₂|
+    
+    Why use Manhattan?
+    • Less sensitive to outliers
+    • Better for high-dimensional data
+    • Grid-based navigation (like city blocks)
+
+
+MINKOWSKI DISTANCE:
+    
+    p = 1:  Manhattan distance
+    p = 2:  Euclidean distance
+    p → ∞:  Chebyshev distance (max coordinate difference)
+    
+    d(x, y)_p = [Σ|x_j - y_j|^p]^(1/p)
+
+
+COSINE SIMILARITY (for text/vectors):
+    
+    cos(θ) = (x · y) / (||x|| × ||y||)
+    
+    d_cos = 1 - cos(θ)
+    
+    Useful for:
+    • Text classification
+    • High-dimensional sparse data
+
+3.2 DISTANCE WEIGHTED KNN
+────────────────────────
+
+WEIGHT BY DISTANCE:
+
+    Instead of simple majority vote, weight neighbors by their distance:
+    
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   For classification:                                                │
+│                                                                     │
+│   P(y = c | x) = Σᵢ∈N_k(x) wᵢ × I(yᵢ = c) / Σᵢ wᵢ             │
+│                                                                     │
+│   Where:                                                            │
+│   wᵢ = 1 / d(x, xᵢ)^p  (inverse distance weighting)               │
+│   wᵢ = exp(-d(x, xᵢ)² / 2σ²)  (Gaussian kernel)              │
+│                                                                     │
+└──────────────────────────────────────────────────────────────────���─���┘
+
+For regression:
+
+    ŷ = Σᵢ wᵢ × yᵢ / Σᵢ wᵢ
+
+Common weight functions:
+
+    ┌────────────────┬───────────────────────────────────────────────┐
+    │ Weight Function│ Formula                                  │
+    ├───────────────┼───────────────────────────────────────────────┤
+    │ 1/d          │ w = 1/d                                 │
+    │ 1/d²         │ w = 1/d²                                │
+    │ Gaussian     │ w = exp(-d²/(2σ²))                      │
+    │ Subsample    │ w = (1-d/d_max) when d < d_max          │
+    │              │ w = 0 otherwise                         │
+    └───────────────┴───────────────────────────────────────────────┘
+
+3.3 DERIVATION FROM BAYES THEOREM
+──────────────────────────────────
+
+KNN can be derived from Bayes theorem:
+
+From Bayes:
+    P(y=c|x) = P(x|y=c)P(y=c) / P(x)
+
+KNN approximates P(x|y=c) using local density:
+
+    P(x|y=c) ≈ K_c(x) / N_c
+
+Where:
+    K_c(x) = number of class c points in neighborhood
+    N_c = total class c points
+
+Then:
+    P(y=c|x) ≈ [K_c(x) / N_c] / [Σ_m K_m(x) / N_m]
+
+MAJORITY VOTE AS SPECIAL CASE:
+
+If all classes have equal prior (N_c = N/K):
+    P(y=c|x) ∝ K_c(x)
+    argmax P(y=c|x) = argmax K_c(x)
+
+This is just majority vote!
+
+================================================================================
+                    4. CHOOSING OPTIMAL K
+================================================================================
+
+    ┌─────────────────────────────────────────────���───────────────────────┐
+    │                          K EFFECTS                                │
+    │                                                                     │
+    │   K = 1:                                                         │
+    │   • Very flexible boundary                                          │
+    │   • High variance, low bias                                       │
+    │   • Prone to OVERFITTING                                         │
+    │   • Sensitive to noise                                            │
+    │                                                                     │
+    │   K = large:                                                     │
+    │   • Smoother boundary                                           │
+    │   • Low variance, higher bias                                    │
+    │   • May UNDERFIT                                                 │
+    │   • More robust to noise                                         │
+    │                                                                     │
+    │   Rule of thumb: K ≈ √n (square root of samples)                │
+    │   Use cross-validation to find optimal K!                          │
+    └─────────────────────────────────────────────────────────────────────┘
+
+CROSS-VALIDATION FOR K:
+
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.neighbors import KNeighborsClassifier
+    
+    param_grid = {'n_neighbors': [1, 3, 5, 7, 9, 11]}
+    
+    grid = GridSearchCV(
+        KNeighborsClassifier(),
+        param_grid,
+        cv=5,
+        scoring='accuracy'
+    )
+    grid.fit(X, y)
+    
+    print(grid.best_params_)  # {'n_neighbors': 5}
+    print(grid.best_score_)  # Best CV accuracy
+
+ELBOW METHOD:
+
+    Plot training accuracy vs K:
+    
+    Very small K:  High accuracy (may overfit)
+    Increase K:  Accuracy drops (smooth boundary)
+    
+    Find "elbow" where accuracy starts dropping significantly
+
+================================================================================
+                    5. CURSE OF DIMENSIONALITY
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                 CURSE OF DIMENSIONALITY                             │
+    │                                                                     │
+    │   As dimensionality increases:                                      │
+    │                                                                     │
+    │   • Volume grows exponentially                                    │
+    │   • Data becomes sparse                                          │
+    │   • Distances between points converge to similar values            │
+    │   • "Nearest neighbor" may not be meaningful                    │
+    │                                                                     │
+    │   SOLUTIONS:                                                     │
+    │   ✓ Feature selection                                            │
+    │   ✓ Dimensionality reduction (PCA, LDA)                           │
+    │   ✓ Use appropriate distance metric                              │
+    │   ✓ Sufficient data (exponential in p!)                         │
+    └───────────────────────────────────────────────────────────���─���───────┘
+
+EFFECT ON KNN:
+
+    In high dimensions, all points become approximately equidistant!
+    
+    Distance distribution in high dimensions:
+    
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   d_max - d_min                                                 │
+    │   _______________ → 0                                            │
+    │   d_max                                                       │
+    │                                                                     │
+    │   Ratio goes to 0 as dimensions increase!                        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+MITIGATION STRATEGIES:
+
+    1. DIMENSIONALITY REDUCTION:
+       • PCA before KNN
+       • Select k most important features
+    
+    2. FEATURE SCALING:
+       • Standardize all features to same scale
+       • Prevents features with large ranges dominating
+    
+    3. DISTANCE WEIGHTING:
+       • More robust in high dimensions
+       • Gaussian kernel
+
+================================================================================
+                    6. KNN FOR CLASSIFICATION VS REGRESSION
+================================================================================
+
+KNN CLASSIFICATION (KNeighborsClassifier):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Algorithm:                                                       │
+    │   1. Find K nearest neighbors                                     │
+    │   2. Count labels of neighbors                                       │
+    │   3. Return majority label                                         │
+    │                                                                     │
+    │   Output: Class label (categorical)                                 │
+    │                                                                     │
+    │   Metrics: Accuracy, Precision, Recall, F1                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KNN REGRESSION (KNeighborsRegressor):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Algorithm:                                                       │
+    │   1. Find K nearest neighbors                                     │
+    │   2. Average their target values                                 │
+    │   3. Return mean (or weighted mean)                               │
+    │                                                                     │
+    │   Output: Continuous value                                      │
+    │                                                                     │
+    │   Metrics: MSE, RMSE, MAE, R²                                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+COMPARISON:
+
+┌────────────────────┬─────────────────────────────────────────────────────┐
+│ Aspect            │ Classification    │ Regression             │
+├────────────────────┼─────────────────┼───────────────────────┤
+│ Output           │ Class label     │ Continuous value       │
+│ Prediction      │ Majority vote │ Mean of neighbors    │
+│ K value         │ Usually odd   │ Any positive       │
+│                 │ (avoid ties) │                     │
+│ Metric          │ Accuracy     │ MSE, R²            │
+│ Sensitive to    │ Class balance│ Outliers            │
+│                 │             │                     │
+└────────────────────┴───────────────┴─────────────────────┘
+
+================================================================================
+                    7. IMPLEMENTATION WITH SKLEARN
+================================================================================
+
+from sklearn.neighbors import (
+    KNeighborsClassifier,
+    KNeighborsRegressor,
+    NearestNeighbors
+)
+
+CLASSIFICATION EXAMPLE:
+
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.datasets import make_classification
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import accuracy_score
+    
+    # Generate data
+    X, y = make_classification(n_samples=500, n_features=10, random_state=42)
+    
+    # Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    
+    # Train (no training needed for KNN - lazy learning!)
+    knn = KNeighborsClassifier(n_neighbors=5, metric='euclidean')
+    knn.fit(X_train, y_train)
+    
+    # Predict
+    y_pred = knn.predict(X_test)
+    print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+
+REGRESSION EXAMPLE:
+
+    from sklearn.neighbors import KNeighborsRegressor
+    from sklearn.datasets import make_regression
+    
+    # Generate data
+    X, y = make_regression(n_samples=500, n_features=5, noise=10)
+    
+    # Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    
+    # Train
+    knn = KNeighborsRegressor(n_neighbors=5, weights='distance')
+    knn.fit(X_train, y_train)
+    
+    # Predict
+    y_pred = knn.predict(X_test)
+    print(f"R² Score: {knn.score(X_test, y_test):.4f}")
+
+ADVANCED PARAMETERS:
+
+    KNeighborsClassifier(
+        n_neighbors=5,        # K value
+        weights='uniform',    # 'uniform' or 'distance'
+        metric='euclidean', # Distance metric
+        algorithm='auto', # 'ball_tree', 'kd_tree', 'brute'
+        leaf_size=30,     # For ball_tree/kd_tree
+        p=2,            # Power parameter for Minkowski
+        n_jobs=-1         # Parallel jobs
+    )
+
+PARAMETER OPTIONS:
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│   n_neighbors:                                                    │
+│   • K = 1, 3, 5, 7, 9, 11...                             │
+│   • Use cross-validation to find optimal                          │
+│                                                                  │
+│   weights:                                                        │
+│   • 'uniform' - all neighbors equal                            │
+│   • 'distance' - weight by inverse distance                      │
+│   • callable - custom weight function                           │
+│                                                                  │
+│   metric:                                                         │
+│   • 'euclidean' - L2 distance                                    │
+│   • 'manhattan' - L1 distance                                    │
+│   • 'minkowski' - Lp distance (use p= parameter)            │
+│   • ' cosine' - cosine similarity                               │
+│   • 'precomputed' - use precomputed distance                  │
+│                                                                  │
+│   algorithm:                                                        │
+│   • 'auto' - chooses best algorithm                           │
+│   • 'ball_tree' - good for low dimensions                     │
+│   • 'kd_tree' - good for low dimensions                     │
+│   • 'brute' - exact, works for all                        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    8. COMPLETE CODE EXAMPLES
+================================================================================
+
+================================================================================
+EXAMPLE 1: Basic KNN Classification
+================================================================================
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, classification_report
+
+print("="*70)
+print("EXAMPLE 1: KNN Classification - Iris Dataset")
+print("="*70)
+
+# Load iris
+iris = load_iris()
+X, y = iris.data, iris.target
+
+print(f"\nDataset: Iris ({X.shape[0]} samples, {X.shape[1]} features)")
+
+# Split (IMPORTANT: scale features!)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.3, random_state=42, stratify=y
+)
+
+# Train KNN for different K values
+print("\nKNN for different K values:")
+print("-" * 40)
+
+for k in [1, 3, 5, 7, 9, 11]:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    print(f"  K={k:>2}: Accuracy = {acc:.4f}")
+
+# Best model
+best_k = 5
+knn_best = KNeighborsClassifier(n_neighbors=best_k)
+knn_best.fit(X_train, y_train)
+
+print(f"\nBest model (K={best_k}):")
+print(classification_report(y_test, knn_best.predict(X_test)))
+
+================================================================================
+EXAMPLE 2: KNN Regression
+================================================================================
+
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+
+print("\n" + "="*70)
+print("EXAMPLE 2: KNN Regression")
+print("="*70)
+
+# Generate regression data
+X, y = make_regression(n_samples=500, n_features=5, noise=10, random_state=42)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+# Train KNN regressor
+knn = KNeighborsRegressor(n_neighbors=5, weights='distance')
+knn.fit(X_train, y_train)
+
+# Predict
+y_pred = knn.predict(X_test)
+
+print(f"\nKNN Regression Results:")
+print(f"  MSE: {mean_squared_error(y_test, y_pred):.4f}")
+print(f"  RMSE: {np.sqrt(mean_squared_error(y_test, y_pred)):.4f}")
+print(f"  R²: {r2_score(y_test, y_pred):.4f}")
+
+# Compare uniform vs distance weighting
+print("\nUniform vs Distance weighting:")
+print("-" * 40)
+
+for weights in ['uniform', 'distance']:
+    knn = KNeighborsRegressor(n_neighbors=5, weights=weights)
+    knn.fit(X_train, y_train)
+    r2 = r2_score(y_test, knn.predict(X_test))
+    print(f"  {weights:<10}: R² = {r2:.4f}")
+
+================================================================================
+EXAMPLE 3: Finding Optimal K with Cross-Validation
+================================================================================
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.datasets import make_classification
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("\n" + "="*70)
+print("EXAMPLE 3: Finding Optimal K with Cross-Validation")
+print("="*70)
+
+# Generate data
+X, y = make_classification(n_samples=500, n_features=10, random_state=42)
+
+# Test different K values
+k_values = range(1, 31, 2)  # 1, 3, 5, ..., 29
+cv_scores = []
+
+for k in k_values:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    scores = cross_val_score(knn, X, y, cv=5, scoring='accuracy')
+    cv_scores.append(scores.mean())
+
+best_k = k_values[np.argmax(cv_scores)]
+best_score = max(cv_scores)
+
+print(f"\nOptimal K: {best_k}")
+print(f"Best CV Accuracy: {best_score:.4f}")
+
+# Using GridSearchCV
+param_grid = {'n_neighbors': list(range(1, 31, 2))}
+
+grid = GridSearchCV(
+    KNeighborsClassifier(),
+    param_grid,
+    cv=5,
+    scoring='accuracy'
+)
+grid.fit(X, y)
+
+print(f"\nGridSearchCV Results:")
+print(f"  Best K: {grid.best_params_['n_neighbors']}")
+print(f"  Best Score: {grid.best_score_:.4f}")
+
+# Visualization would show elbow curve
+print("\nCV Accuracy vs K:")
+print("-" * 40)
+for k, score in zip(k_values, cv_scores):
+    bar = "█" * int(score * 50)
+    print(f"  K={k:>2}: {bar} {score:.4f}")
+
+================================================================================
+EXAMPLE 4: Distance Weighted KNN
+================================================================================
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+import numpy as np
+
+print("\n" + "="*70)
+print("EXAMPLE 4: Distance Weighted KNN")
+print("="*70)
+
+# Generate moon-shaped data
+X, y = make_moons(n_samples=500, noise=0.1, random_state=42)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+# Compare weighting schemes
+print("\nWeighting Schemes:")
+print("-" * 50)
+
+weights_list = ['uniform', 'distance', 'callable']
+
+for weights in weights_list:
+    if weights == 'callable':
+        knn = KNeighborsClassifier(
+            n_neighbors=5,
+            weights=lambda d: 1/(d + 1e-10)  # Custom: 1/d
+        )
+    else:
+        knn = KNeighborsClassifier(n_neighbors=5, weights=weights)
+    
+    knn.fit(X_train, y_train)
+    acc = knn.score(X_test, y_test)
+    print(f"  {weights:<10}: Accuracy = {acc:.4f}")
+
+# Custom kernel weighting
+print("\nCustom Kernel Weights:")
+print("-" * 40)
+
+kernels = [
+    ('uniform', lambda d: np.ones_like(d)),
+    ('1/d', lambda d: 1/(d + 1e-10)),
+    ('1/d²', lambda d: 1/(d**2 + 1e-10)),
+    ('Gaussian', lambda d: np.exp(-d**2 / 2)),
+    ('exponential', lambda d: np.exp(-d)),
+]
+
+for name, kernel in kernels:
+    knn = KNeighborsClassifier(n_neighbors=5, weights=kernel)
+    knn.fit(X_train, y_train)
+    acc = knn.score(X_test, y_test)
+    print(f"  {name:<12}: Accuracy = {acc:.4f}")
+
+================================================================================
+EXAMPLE 5: Curse of Dimensionality Demonstration
+================================================================================
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.datasets import make_classification
+from sklearn.model_selection import cross_val_score
+import numpy as np
+
+print("\n" + "="*70)
+print("EXAMPLE 5: Curse of Dimensionality")
+print("="*70)
+
+# Generate data with increasing dimensions
+dimensions = [2, 5, 10, 20, 50, 100]
+cv_accuracies = []
+
+print("\nKNN Accuracy vs Dimensions:")
+print("-" * 50)
+
+for dim in dimensions:
+    X, y = make_classification(
+        n_samples=500,
+        n_features=dim,
+        n_informative=dim,
+        random_state=42
+    )
+    
+    knn = KNeighborsClassifier(n_neighbors=5)
+    scores = cross_val_score(knn, X, y, cv=5, scoring='accuracy')
+    cv_accuracies.append(scores.mean())
+    
+    print(f"  d={dim:>3}: Accuracy = {scores.mean():.4f}")
+
+print("\nObservation: Accuracy typically decreases as dimensions increase!")
+print("Solution: Use dimensionality reduction or feature selection")
+
+================================================================================
+EXAMPLE 6: KNN with Different Distance Metrics
+================================================================================
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+print("\n" + "="*70)
+print("EXAMPLE 6: Different Distance Metrics")
+print("="*70)
+
+# Load iris
+iris = load_iris()
+X, y = iris.data, iris.target
+
+# Scale
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3)
+
+# Test distance metrics
+metrics = {
+    'euclidean': 2,
+    'manhattan': 1,
+    'chebyshev': np.inf,  # p→∞
+    'minkowski_1.5': 1.5,
+}
+
+print("\nDistance Metrics:")
+print("-" * 50)
+
+for name, p in metrics.items():
+    knn = KNeighborsClassifier(n_neighbors=5, p=p)
+    knn.fit(X_train, y_train)
+    acc = accuracy_score(y_test, knn.predict(X_test))
+    print(f"  {name:<15}: Accuracy = {acc:.4f}")
+
+# Hamming for categorical
+print("\nNote: Use 'hamming' for categorical features")
+print("      Use 'cosine' for text data")
+
+================================================================================
+EXAMPLE 7: Large KNN with Efficient Algorithms
+================================================================================
+
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
+from sklearn.datasets import make_classification
+import time
+
+print("\n" + "="*70)
+print("EXAMPLE 7: Efficient KNN for Large Datasets")
+print("="*70)
+
+# Generate large dataset
+X, y = make_classification(n_samples=10000, n_features=50)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+# Test algorithms
+algorithms = ['ball_tree', 'kd_tree', 'brute', 'auto']
+
+print("\nAlgorithm Efficiency:")
+print("-" * 50)
+
+for algo in algorithms:
+    knn = KNeighborsClassifier(n_neighbors=5, algorithm=algo)
+    
+    start = time.time()
+    knn.fit(X_train, y_train)
+    fit_time = time.time() - start
+    
+    start = time.time()
+    y_pred = knn.predict(X_test)
+    predict_time = time.time() - start
+    
+    print(f"  {algo:<10}: fit={fit_time:.4f}s, predict={predict_time:.4f}s")
+
+print("\nRecommendations:")
+print("  • Low dimensions (<20): 'kd_tree' is usually fastest")
+print("  • High dimensions: 'brute' or 'auto'")
+print("  • Very large n: Consider approximate methods (LSH, FAISS)")
+
+================================================================================
+                    SUMMARY
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                   K-NEAREST NEIGHBORS SUMMARY                       │
+    ├─────────────────────────────────────────────────────────────────────┤
+    │                                                                     │
+    │   WHAT IT DOES:                                                   │
+    │   Finds K closest training points and votes/takes mean           │
+    │                                                                     │
+    │   KEY PARAMETERS:                                                 │
+    │   • K (n_neighbors): Number of neighbors to consider               │
+    │   • Distance metric: How to measure similarity                     │
+    │   • Weighting: uniform vs distance-based                          │
+    │                                                                     │
+    │   PROS:                                                           │
+    │   ✓ Simple to understand and implement                            │
+    │   ✓ No training required (lazy learning)                         │
+    │   ✓ Works with any decision boundary                            │
+    │   ✓ Natural for multi-class problems                           │
+    │                                                                     │
+    │   CONS:                                                           │
+    │   ✗ Slow prediction (computes distances to all points)          │
+    │   ✗ Sensitive to irrelevant features                         │
+    │   ✗ Suffers from curse of dimensionality                       │
+    │   ✗ Requires feature scaling                                  │
+    │                                                                     │
+    │   BEST FOR:                                                       │
+    │   • Low-dimensional data                                        │
+    │   • Complex decision boundaries                                 │
+    │   • When interpretability is important                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================
