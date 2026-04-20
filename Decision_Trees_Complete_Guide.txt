@@ -1,0 +1,807 @@
+================================================================================
+                    DECISION TREES
+                Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                        TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to Decision Trees
+2. How Decision Trees Work
+3. Splitting Criteria (Impurity Measures)
+   3.1 Entropy & Information Gain
+   3.2 Gini Index
+   3.3 Classification Error
+   3.4 Comparison
+4. Algorithms
+   4.1 ID3 Algorithm
+   4.2 C4.5 Algorithm
+   4.3 CART Algorithm
+5. Building Decision Trees
+6. Pruning Strategies
+7. Handling Overfitting
+8. Decision Trees for Regression
+9. Implementation with sklearn
+10. Complete Code Examples
+
+================================================================================
+                    1. INTRODUCTION TO DECISION TREES
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │               DECISION TREE                                          │
+    │   ─────────────────                                               │
+    │                                                                     │
+    │   A supervised learning algorithm that creates a model            │
+    │   predicting target values by learning decision rules             │
+    │   inferred from features.                                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KEY CHARACTERISTICS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  ✓ INTERPRETABLE                                                 │
+    │    Easy to visualize and understand                               │
+    │    Rules can be extracted and interpreted                       │
+    │                                                                     │
+    │  ✓ HANDLES BOTH CLASSIFICATION & REGRESSION                     │
+    │    Can predict categorical and continuous targets                │
+    │                                                                     │
+    │  ✓ CAPTURES NON-LINEAR RELATIONSHIPS                            │
+    │    Can model complex decision boundaries                        │
+    │                                                                     │
+    │  ✓ REQUIRES LITTLE DATA PREPROCESSING                            │
+    │    No feature scaling needed                                   │
+    │    Can handle categorical and numerical features              │
+    │                                                                     │
+    │  ✓ PRONE TO OVERFITTING                                        │
+    │    Can create biased trees if not pruned properly               │
+    └────────────────────────��────────────────────────────────────────────┘
+
+VISUAL REPRESENTATION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │                    Is income > 50K?                                 │
+    │                          │                                        │
+    │            ┌───────────┴───────────┐                              │
+    │           YES                   NO                              │
+    │            │                     │                              │
+    │      Age > 40?           Education > 12?                      │
+    │            │                     │                             │
+    │     ┌────┴────┐         ┌────┴────┐                          │
+    │   YES    NO        YES    NO                                   │
+    │    │      │          │      │                                   │
+    │   YES   NO       YES    NO                                    │
+    │                                                                     │
+    │   Leaf nodes contain predictions                                  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    2. HOW DECISION TREES WORK
+================================================================================
+
+STEP-BY-STEP ALGORITHM:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   INPUT:  Training data (X, y)                                     │
+    │           Feature set F                                              │
+    │                                                                     │
+    │   OUTPUT: Decision tree                                         │
+    │                                                                     │
+    │   ALGORITHM:                                                     │
+    │   ─────────────────────────────────────────────────────────────         │
+    │   1. START with root node containing all training data            │
+    │                                                                     │
+    │   2. IF all samples belong to same class:                       │
+    │         → Return leaf node with that class                        │
+    │                                                                     │
+    │   3. FOR each feature f in F:                                 │
+    │         → Evaluate split using impurity measure                │
+    │         → Select best feature and split point                   │
+    │                                                                     │
+    │   4. CREATE two child nodes using best split                      │
+    │                                                                     │
+    │   5. RECURSIVELY repeat steps 1-4 for each child                │
+    │         → Stop when stopping criteria met                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+HOW SPLITTING WORKS:
+
+    Parent node: 100 samples (50 class A, 50 class B)
+    
+    Split on feature "Age < 30":
+    
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Child 1 (Age < 30):    60 samples (10 A, 50 B)                 │
+    │   Child 2 (Age ≥ 30):     40 samples (40 A, 0 B)                  │
+    │                                                                     │
+    │   This is a GOOD split because:                                     │
+    │   • Child 1 is mostly class B                                     │
+    │   • Child 2 is all class A                                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+BEST SPLIT = One that maximizes homogeneity in child nodes
+
+================================================================================
+                    3. SPLITTING CRITERIA (IMPURITY MEASURES)
+================================================================================
+
+3.1 ENTROPY & INFORMATION GAIN
+──────────────────────────────────
+
+ENTROPY:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Entropy measures randomness/impurity in a dataset:              │
+    │                                                                     │
+    │          H(S) = -Σⱼ pⱼ × log₂(pⱼ)                                 │
+    │                                                                     │
+    │   Where:                                                           │
+    │   • S = training set                                                │
+    │   • pⱼ = proportion of samples in class j                          │
+    │   • log₂ = base 2 logarithm                                        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+PROPERTIES:
+┌─────────────────────────────────────────────────────────────────────┐
+│  • H(S) = 0 when all samples in same class (pure)                 │
+│  • H(S) = 1 when equal distribution (maximum impurity)            │
+│  • H(S) between 0 and 1 for binary classification               │
+└─────────────────────────────────────────────────────────────────────┘
+
+ENTROPY EXAMPLE:
+
+    Pure set (all class 0):
+    H = -1 × log₂(1) = 0
+    
+    Even split (50% class 0, 50% class 1):
+    H = -(0.5 × log₂(0.5) + 0.5 × log₂(0.5))
+    H = -(0.5 × (-1) + 0.5 × (-1))
+    H = 1.0
+
+INFORMATION GAIN:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Information Gain = Entropy(parent) - Weighted Entropy(children)  │
+    │                                                                     │
+    │          IG(S, f) = H(S) - Σₖ (|Sₖ|/|S|) × H(Sₖ)                │
+    │                                                                     │
+    │   Where:                                                           │
+    │   • S = parent set                                                 │
+    │   • f = feature to split on                                        │
+    │   • Sₖ = subset after split on feature f                           │
+    │   • |S| = number of samples                                          │
+    │                                                                     │
+    │   BEST SPLIT = feature with HIGHEST Information Gain                │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+INFORMATION GAIN DERIVATION:
+
+    Step 1: Calculate parent entropy
+    H(parent) for 100 samples (50 A, 50 B):
+    H = -0.5×log₂(0.5) - 0.5×log₂(0.5) = 1.0
+    
+    Step 2: Split on feature "Age < 30"
+    Child 1: 60 samples (10 A, 50 B)
+            H₁ = -(1/6)×log₂(1/6) - (5/6)×log₂(5/6) = 0.65
+    Child 2: 40 samples (40 A, 0 B)
+            H₂ = -(1)×log₂(1) = 0
+    
+    Step 3: Weighted average
+    Weighted H = (60/100)×0.65 + (40/100)×0 = 0.39
+    
+    Step 4: Information Gain
+    IG = 1.0 - 0.39 = 0.61
+
+3.2 GINI INDEX
+──────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Gini Index measures impurity:                                      │
+    │                                                                     │
+    │          Gini(S) = 1 - Σⱼ pⱼ²                                      │
+    │                                                                     │
+    │   Where:                                                           │
+    │   • pⱼ = proportion of samples in class j                          │
+    │                                                                     │
+    │   Gini Gain = Gini(parent) - Weighted Gini(children)              │
+    │                                                                     │
+    │   BEST SPLIT = feature with HIGHEST Gini Gain                      │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+GINI EXAMPLE:
+
+    For 100 samples (50 A, 50 B):
+    Gini = 1 - (0.5)² - (0.5)² = 0.5
+    
+    For 100 samples (100 A, 0 B):
+    Gini = 1 - (1)² - (0)² = 0
+
+3.3 CLASSIFICATION ERROR
+──────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Classification Error:                                            │
+    │                                                                     │
+    │          Error(S) = 1 - max(pⱼ)                                     │
+    │                                                                     │
+    │   Less commonly used (less sensitive to changes)                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.4 COMPARISON
+──────────────────────────────────
+
+┌────────────────┬────────────────────────────────────────────────────────────┐
+│ Measure        │ Formula                    │ Best Split                    │
+├───────────────┼───────────────────────────┼─────────────────────────────┤
+│ Entropy       │ -Σp×log₂(p)               │ Highest IG                  │
+│ Gini         │ 1 - Σp²                  │ Highest Gini Gain            │
+│ Classification│ 1 - max(p)               │ Highest Error Reduction    │
+└───────────────┴───────────────────────────┴─────────────────────────────┘
+
+WHEN TO USE:
+- Entropy/IG: Similar to C4.5 algorithm
+- Gini: Similar to CART algorithm
+- Gini slightly faster (no logarithms)
+- Results usually similar
+
+================================================================================
+                    4. ALGORITHMS
+================================================================================
+
+4.1 ID3 ALGORITHM (Iterative Dichotomiser 3)
+────────────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ID3 Algorithm:                                                   │
+    │   ───────────────────────────────────────────────────               │
+    │   1. Calculate entropy of training data                           │
+    │   2. For each feature:                                          │
+    │        → Calculate entropy for each branch                     │
+    │        → Calculate weighted average                             │
+    │        → Calculate information gain                          │
+    │   3. Choose feature with HIGHEST information gain             │
+    │   4. Create node with that feature                            │
+    │   5. Recursively repeat for each branch                       │
+    │                                                                     │
+    │   Limitations:                                                  │
+    │   • Only handles categorical features                           │
+    │   • Can overfit with deep trees                                 │
+    │   • Doesn't handle missing values                            │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+4.2 C4.5 ALGORITHM
+────────────────────────────────────────
+
+    Improvements over ID3:
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ✓ Handles both continuous and categorical features                   │
+    │   ✓ Handles missing values                                         │
+    │   ✓ Uses gain ratio (normalizes for number of branches)          │
+    │   ✓ Includes pruning (reduced-error pruning)                │
+    │                                                                     │
+    │   GAIN RATIO:                                                   │
+    │   Gain Ratio = Information Gain / Split Information           │
+    │                                                                     │
+    │   Split Info = -Σ (|Sₖ|/|S|) × log₂(|Sₖ|/|S|)               │
+    │                                                                     │
+    │   Prevents bias toward features with many branches            │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+4.3 CART ALGORITHM (Classification and Regression Trees)
+────────────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   CART Algorithm:                                                 │
+    │   ───────────────                                               │
+    │   1. Binary splits only (≤ or >)                               │
+    │   2. Uses Gini index for classification                        │
+    │   3. Uses variance reduction for regression                   │
+    │   4. Includes cost-complexity pruning                        │
+    │   5. Builds tree, thenprunes systematically                  │
+    │                                                                     │
+    │   RECURSION:                                                  │
+    │   For each node:                                               │
+    │   → Find best split (feature + threshold)                   │
+    │   → If split improves impurity: create child nodes           │
+    │   → Otherwise: make leaf node                                 │
+    │                                                                     │
+    └──────────────────────────────────────────────────────────────────��─��┘
+
+================================================================================
+                    5. BUILDING DECISION TREES
+================================================================================
+
+DECISION TREE BUILDING PROCESS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   START: All training data at root                               │
+    │                                                                     │
+    │   FOR each node:                                                │
+    │   ┌──────────────────────────────────────────────────────────     │
+    │   │                                                          │  │
+    │   │   1. Check stopping criteria                            │  │
+    │   │   2. Find best split (maximum IG/Gini)                   │  │
+    │   │   3. If split improves: create children                  │  │
+    │   │   4. Otherwise: make leaf node                           │  │
+    │   └──────────────────────────────────────────────────────────     │
+    │                                                                     │
+    │   STOPPING CRITERIA:                                           │
+    │   ─────────────────────────────────────────────────────          │
+    │   • All samples belong to same class                           │
+    │   • No features left to split on                           │
+    │   • Minimum samples per leaf                               │
+    │   • Maximum tree depth reached                             │
+    │   • No improvement in split                                │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+FEATURE IMPORTANCE:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Feature importance = Σ (IG at node using feature)              │
+    │                         / Σ (IG at all nodes)                      │
+    │                                                                     │
+    │   Higher importance = feature used more frequently              │
+    │   with bigger information gain                                  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    6. PRUNING STRATEGIES
+================================================================================
+
+WHY PRUNE?
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Unpruned trees can overfit:                                     │
+    │   • Too many splits capture noise                                │
+    │   • Too specific to training data                               │
+    │   • Poor generalization                                         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+PRE-PRUNING (Early Stopping):
+
+    Stop growing tree when:
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  • Maximum depth reached                                         │
+    │  • Minimum samples per leaf (e.g., 10)                         │
+    │  • Minimum samples to split (e.g., 20)                         │
+    │  • No further impurity reduction                               │
+    │  • Information gain < threshold                                 │
+    └─────────────────────────────────────────────────────────────────────┘
+
+POST-PRUNING (Reduced-Error Pruning):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   1. Build full tree                                             │
+    │   2. For each non-leaf node:                                     │
+    │        → Temporarily remove subtree                              │
+    │        → Classify validation set                                  │
+    │        → If accuracy improves: make leaf node                    │
+    │                                                                     │
+    │   Better than pre-pruning but requires more data                 │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+COST-COMPLEXITY PRUNING (CART):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Minimize: R_α(T) = R(T) + α × |T|                               │
+    │                                                                     │
+    │   Where:                                                           │
+    │   • R(T) = misclassification rate                                 │
+    │   • |T| = number of leaf nodes                                     │
+    │   • α = complexity parameter (tuned via CV)                    │
+    │                                                                     │
+    │   Find α that balances accuracy and simplicity                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    7. HANDLING OVERFITTING
+================================================================================
+
+OVERFITTING INDICATORS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   • Training accuracy high, test accuracy low                     │
+    │   • Tree very deep with many branches                             │
+    │   • Leaf nodes with very few samples                              │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+SOLUTIONS:
+
+    1. LIMIT TREE COMPLEXITY:
+       max_depth, min_samples_leaf, min_samples_split
+
+    2. FEATURE SELECTION:
+       Only use important features
+
+    3. ENSEMBLE METHODS:
+       Random Forest (multiple trees averaged)
+
+    4. CROSS-VALIDATION:
+       Find optimal parameters
+
+================================================================================
+                    8. DECISION TREES FOR REGRESSION
+================================================================================
+
+DIFFERENCES FROM CLASSIFICATION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                              │ CLASSIFICATION │ REGRESSION    │
+    ├─────────────────────────────┼────────────────┼───────────────┤
+    │ Target variable             │ Categorical   │ Continuous   │
+    │ Impurity measure           │ Gini/Entropy │ Variance      │
+    │ Split criterion            │ IG/Gini Gain │ Variance Red.│
+    │ Leaf prediction           │ Majority class│ Mean value   │
+    │ Evaluation                │ Accuracy     │ MSE/R²       │
+    └─────────────────────────────┴───────────────┴───────────────┘
+
+REGRESSION TREE ALGORITHM:
+
+    Choose split that minimizes:
+    
+    Variance Reduction = Var(parent) - Weighted Var(children)
+    
+    Where:
+    Var(S) = Σ (yᵢ - ȳ)² / |S|
+    
+    Best split = Maximum variance reduction
+
+================================================================================
+                    9. IMPLEMENTATION WITH SKLEARN
+================================================================================
+
+from sklearn.tree import (
+    DecisionTreeClassifier,
+    DecisionTreeRegressor
+)
+
+CLASSIFICATION EXAMPLE:
+
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.datasets import load_iris
+    from sklearn.model_selection import train_test_split
+    
+    # Load data
+    iris = load_iris()
+    X, y = iris.data, iris.target
+    
+    # Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    
+    # Train
+    clf = DecisionTreeClassifier(
+        criterion='gini',        # 'gini' or 'entropy'
+        max_depth=5,              # Maximum depth
+        min_samples_leaf=10,     # Min samples in leaf
+        min_samples_split=20,    # Min samples to split
+        random_state=42
+    )
+    clf.fit(X_train, y_train)
+    
+    # Predict
+    y_pred = clf.predict(X_test)
+    accuracy = clf.score(X_test, y_test)
+
+REGRESSION EXAMPLE:
+
+    from sklearn.tree import DecisionTreeRegressor
+    from sklearn.datasets import make_regression
+    
+    # Generate data
+    X, y = make_regression(n_samples=500, noise=10)
+    
+    # Train
+    reg = DecisionTreeRegressor(max_depth=5)
+    reg.fit(X_train, y_train)
+    
+    # Predict
+    y_pred = reg.predict(X_test)
+    r2 = reg.score(X_test, y_test)
+
+FEATURE IMPORTANCE:
+
+    importance = clf.feature_importances_
+    # Shows relative importance of each feature
+
+VISUALIZE TREE:
+
+    from sklearn.tree import plot_tree, export_text
+    
+    # Text representation
+    print(export_text(clf))
+    
+    # Plot
+    plot_tree(clf, feature_names=features, filled=True)
+
+================================================================================
+                    10. COMPLETE CODE EXAMPLES
+================================================================================
+
+================================================================================
+EXAMPLE 1: Basic Decision Tree Classification
+================================================================================
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report
+import numpy as np
+
+print("="*70)
+print("EXAMPLE 1: Decision Tree - Iris Dataset")
+print("="*70)
+
+# Load iris
+iris = load_iris()
+X, y = iris.data, iris.target
+feature_names = iris.feature_names
+
+print(f"\nDataset: Iris ({X.shape[0]} samples, {X.shape[1]} features)")
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Train with different depths
+print("\n📈 Accuracy vs Tree Depth:")
+print("-" * 40)
+
+for depth in [1, 2, 3, 5, 10, None]:
+    clf = DecisionTreeClassifier(max_depth=depth, random_state=42)
+    clf.fit(X_train, y_train)
+    acc = accuracy_score(y_test, clf.predict(X_test))
+    print(f"   depth={str(depth):>4}: Accuracy = {acc:.4f}")
+
+# Best model
+clf = DecisionTreeClassifier(max_depth=5, random_state=42)
+clf.fit(X_train, y_train)
+
+print(f"\n📋 Classification Report:")
+print(classification_report(y_test, clf.predict(X_test)))
+
+# Feature importance
+print("📊 Feature Importance:")
+for name, imp in zip(feature_names, clf.feature_importances_):
+    bar = "█" * int(imp * 40)
+    print(f"   {name:<15}: {bar} {imp:.4f}")
+
+================================================================================
+EXAMPLE 2: Entropy vs Gini
+================================================================================
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import make_classification
+from sklearn.model_selection import cross_val_score
+import numpy as np
+
+print("\n" + "="*70)
+print("EXAMPLE 2: Entropy vs Gini")
+print("="*70)
+
+# Generate data
+X, y = make_classification(n_samples=1000, random_state=42)
+
+# Compare criteria
+print("\n📊 Entropy vs Gini (5-fold CV):")
+print("-" * 40)
+
+for criterion in ['gini', 'entropy']:
+    clf = DecisionTreeClassifier(criterion=criterion)
+    scores = cross_val_score(clf, X, y, cv=5)
+    print(f"   {criterion:<8}: {scores.mean():.4f} (+/- {scores.std()*2:.4f})")
+
+# Same result expected (differences usually negligible)
+
+================================================================================
+EXAMPLE 3: Pruning
+================================================================================
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import make_classification
+from sklearn.model_selection import cross_val_score
+import numpy as np
+
+print("\n" + "="*70)
+print("EXAMPLE 3: Pruning Strategies")
+print("="*70)
+
+# Generate data
+X, y = make_classification(n_samples=500, random_state=42)
+
+# Unpruned tree
+clf_full = DecisionTreeClassifier(random_state=42)
+scores_full = cross_val_score(clf_full, X, y, cv=5)
+
+# Pruned tree
+clf_pruned = DecisionTreeClassifier(
+    max_depth=5,
+    min_samples_leaf=10,
+    min_samples_split=20,
+    random_state=42
+)
+scores_pruned = cross_val_score(clf_pruned, X, y, cv=5)
+
+print("\n📊 Pruning Impact:")
+print("-" * 40)
+print(f"   Unpruned:  {scores_full.mean():.4f}")
+print(f"   Pruned:    {scores_pruned.mean():.4f}")
+
+# Grid search for optimal parameters
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'max_depth': [3, 5, 7, None],
+    'min_samples_leaf': [5, 10, 20],
+}
+
+grid = GridSearchCV(DecisionTreeClassifier(), param_grid, cv=5)
+grid.fit(X, y)
+
+print(f"\n✅ Best parameters: {grid.best_params_}")
+print(f"   Best CV score: {grid.best_score_:.4f}")
+
+================================================================================
+EXAMPLE 4: Regression Tree
+================================================================================
+
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+
+print("\n" + "="*70)
+print("EXAMPLE 4: Decision Tree Regression")
+print("="*70)
+
+# Generate data
+X, y = make_regression(n_samples=500, n_features=5, noise=10, random_state=42)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+# Train
+reg = DecisionTreeRegressor(max_depth=5)
+reg.fit(X_train, y_train)
+
+# Predict
+y_pred = reg.predict(X_test)
+
+print(f"\n📊 Regression Results:")
+print(f"   MSE: {mean_squared_error(y_test, y_pred):.4f}")
+print(f"   RMSE: {np.sqrt(mean_squared_error(y_test, y_pred)):.4f}")
+print(f"   R²: {r2_score(y_test, y_pred):.4f}")
+
+# Compare depths
+print("\n📈 R² vs Depth:")
+print("-" * 40)
+
+for depth in [2, 3, 5, 10, None]:
+    reg = DecisionTreeRegressor(max_depth=depth)
+    reg.fit(X_train, y_train)
+    r2 = r2_score(y_test, reg.predict(X_test))
+    print(f"   depth={str(depth):>4}: R² = {r2:.4f}")
+
+================================================================================
+EXAMPLE 5: Feature Importance
+================================================================================
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import load_breast_cancer
+
+print("\n" + "="*70)
+print("EXAMPLE 5: Feature Importance - Breast Cancer")
+print("="*70)
+
+# Load data
+data = load_breast_cancer()
+X, y = data.data, data.data
+
+# Train
+clf = DecisionTreeClassifier(max_depth=5, random_state=42)
+clf.fit(X, y)
+
+# Get importance
+importance = clf.feature_importances_
+indices = np.argsort(importance)[::-1]
+
+print("\n📊 Top 10 Important Features:")
+print("-" * 50)
+
+for i in range(10):
+    idx = indices[i]
+    print(f"   {i+1:>2}. {data.feature_names[idx]:<30}: {importance[idx]:.4f}")
+
+================================================================================
+EXAMPLE 6: Extract Rules
+================================================================================
+
+from sklearn.tree import export_text, DecisionTreeClassifier
+from sklearn.datasets import load_iris
+
+print("\n" + "="*70)
+print("EXAMPLE 6: Extract Decision Rules")
+print("="*70)
+
+# Train
+clf = DecisionTreeClassifier(max_depth=3)
+clf.fit(load_iris().data, load_iris().target)
+
+# Extract rules
+print("\n📋 Decision Rules:")
+print("-" * 50)
+print(export_text(clf, feature_names=load_iris().feature_names))
+
+================================================================================
+                    SUMMARY
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                   DECISION TREES SUMMARY                           │
+    ├─────────────────────────────────────────────────────────────────────┤
+    │                                                                     │
+    │   WHAT IT DOES:                                                 │
+    │   Creates tree of decision rules based on features                │
+    │                                                                     │
+    │   KEY SPLITTING CRITERIA:                                       │
+    │   • Information Gain (Entropy)                               │
+    │   • Gini Index                                              │
+    │                                                                     │
+    │   POPULAR ALGORITHMS:                                          │
+    │   • ID3 (Entropy)                                           │
+    │   • C4.5 (Gain Ratio)                                       │
+    │   • CART (Gini, Binary Splits)                               │
+    │                                                                     │
+    │   PROS:                                                       │
+    │   ✓ Easy to interpret and visualize                        │
+    │   ✓ Handles both categorical and numerical                  │
+    │   ✓ No feature scaling needed                             │
+    │   ✓ Captures non-linear relationships                     │
+    │                                                                     │
+    │   CONS:                                                       │
+    │   ✗ Can overfit deep trees                                │
+    │   ✗ Unstable (small data changes - different tree)       │
+    │   ✗ Can create biased trees with imbalanced classes      │
+    │                                                                     │
+    │   BEST FOR:                                                   │
+    │   • Interpretable models needed                           │
+    │   • Feature importance analysis                        │
+    │   • As base for ensemble methods (Random Forest)        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================
