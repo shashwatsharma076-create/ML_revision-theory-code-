@@ -10,7 +10,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [Logistic Regression](./Logistic_Regression_Complete_Guide.txt) ✅ - Binary, Multinomial, Ordinal
 - [Linear Discriminant Analysis (LDA)](./LDA_Complete_Guide.txt) ✅ - LDA, QDA, Fisher's Discriminant
 - [K-Nearest Neighbors (KNN)](./KNN_Complete_Guide.txt) ✅ - Classification, Regression, Distance Metrics
-- [Decision Trees](./notebooks/03_decision_trees.md) (Coming Soon)
+- [Decision Trees](./Decision_Trees_Complete_Guide.txt) ✅ - Entropy, Gini, Pruning, Regression
 - [Random Forests](./notebooks/04_random_forests.md) (Coming Soon)
 - [Support Vector Machines](./notebooks/05_svm.md) (Coming Soon)
 
@@ -96,4 +96,17 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 7. Curse of Dimensionality
 8. KNN for Classification (Majority Vote)
 9. KNN Regression (Mean/Weighted Mean)
+10. sklearn Implementation (Iris, Breast Cancer datasets)
+
+## Decision Trees Sub-topics ✅
+
+1. Introduction to Decision Trees
+2. How Decision Trees Work (Step-by-Step Algorithm)
+3. Splitting Criteria - Entropy & Information Gain
+4. Gini Index & Classification Error
+5. ID3, C4.5, CART Algorithms
+6. Building Decision Trees
+7. Pruning Strategies (Pre-pruning, Post-pruning)
+8. Handling Overfitting
+9. Decision Trees for Regression
 10. sklearn Implementation (Iris, Breast Cancer datasets)
