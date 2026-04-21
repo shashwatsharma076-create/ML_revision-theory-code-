@@ -11,8 +11,8 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [Linear Discriminant Analysis (LDA)](./LDA_Complete_Guide.txt) ✅ - LDA, QDA, Fisher's Discriminant
 - [K-Nearest Neighbors (KNN)](./KNN_Complete_Guide.txt) ✅ - Classification, Regression, Distance Metrics
 - [Decision Trees](./Decision_Trees_Complete_Guide.txt) ✅ - Entropy, Gini, Pruning, Regression
+- [Support Vector Machines (SVM)](./SVM_Complete_Guide.txt) ✅ - Kernel Trick, RBF, Classification, Regression
 - [Random Forests](./notebooks/04_random_forests.md) (Coming Soon)
-- [Support Vector Machines](./notebooks/05_svm.md) (Coming Soon)
 
 ### Unsupervised Learning
 - [Clustering](./notebooks/06_clustering.md) (Coming Soon)
@@ -110,3 +110,16 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 8. Handling Overfitting
 9. Decision Trees for Regression
 10. sklearn Implementation (Iris, Breast Cancer datasets)
+
+## Support Vector Machines (SVM) Sub-topics ✅
+
+1. Introduction to SVM & Maximum Margin Classifier
+2. Geometric Understanding (Hyperplane, Margin, Support Vectors)
+3. Mathematical Derivation (Primal & Dual Form)
+4. Kernel Trick & Common Kernels (Linear, Polynomial, RBF, Sigmoid)
+5. Non-Linear SVM with Kernel Mapping
+6. Soft Margin SVM (Slack Variables, C parameter)
+7. SVM for Regression
+8. sklearn Implementation (Classification & Regression)
+9. Parameter Tuning (C, gamma, degree)
+10. Feature Importance via Linear SVM Weights
