@@ -1,0 +1,685 @@
+================================================================================
+                SUPPORT VECTOR MACHINES (SVM)
+                Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                        TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to SVM
+2. Linear SVM - Maximum Margin Classifier
+3. Geometric Understanding
+4. Mathematical Derivation
+   4.1 Primal Form
+   4.2 Dual Form
+   4.3 KKT Conditions
+5. Kernel Trick
+6. Non-Linear SVM
+7. Soft Margin SVM
+8. SVM for Regression
+9. Implementation with sklearn
+10. Complete Code Examples
+
+================================================================================
+                    1. INTRODUCTION TO SVM
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │           SUPPORT VECTOR MACHINES (SVM)                             │
+    │           ────────────────────────────────                                  │
+    │                                                                     │
+    │   A supervised learning algorithm that finds the optimal          │
+    │   hyperplane to separate classes with maximum margin.                 │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KEY CHARACTERISTICS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  ✓ MAXIMUM MARGIN CLASSIFIER                                   │
+    │    Finds hyperplane with maximum separation                   │
+    │                                                                     │
+    │  ✓ USES SUPPORT VECTORS                                │
+    │    Only depends on boundary points (most informative)              │
+    │                                                                     │
+    │  ✓ USES KERNEL TRICK                                     │
+    │    Can create non-linear decision boundaries              │
+    │                                                                     │
+    │  ✓ EFFECTIVE IN HIGH DIMENSIONS                         │
+    │    Works well even with many features                       │
+    │                                                                     │
+    │  ✓ ROBUST TO OUTLIERS                                      │
+    │    Soft margin handles some misclassification               │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+VISUAL REPRESENTATION:
+
+    ┌────────────────────────────────────────���────────────────────────────┐
+    │                                                                     │
+    │           Class -1     │      Class +1                          │
+    │                  ●    │     ★                             │
+    │                 ●●   │    ★★                             │
+    │                ●●●   │   ★★★                            │
+    │               ●●●●   │  ★★★★                           │
+    │               ────────┼─────────                          │
+    │               ●●●●   │  ★★★★                           │
+    │                ●●●   │   ★★★                            │
+    │                 ●●   │    ★★                             │
+    │                  ●    │     ★                             │
+    │                                                                     │
+    │              ↑    ↑    ↑                                     │
+    │              │ support vectors │                                  │
+    │              (boundary points)                                   │
+    │                                                                     │
+    │              ←─── margin ─────→                              │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    2. LINEAR SVM - MAXIMUM MARGIN CLASSIFIER
+================================================================================
+
+WHAT IS A HYPERPLANE?
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   For p dimensions, hyperplane:                                        │
+    │                                                                     │
+    │        w·x + b = 0                                          │
+    │                                                                     │
+    │   Where:                                                           │
+    │   • w = normal vector (perpendicular to hyperplane)                 │
+    │   • b = bias (offset from origin)                                      │
+    │   • x = point on hyperplane                                          │
+    │                                                                     │
+    │   In 2D: y = mx + c equivalent to:                              │
+    │        w₁x₁ + w₂x₂ + b = 0                                   │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+MAXIMUM MARGIN:
+
+    For linearly separable data:
+    
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Margins:                                                        │
+    │   • Functional margin: yᵢ(w·x��� + b)                                 │
+    │   • Geometric margin: yᵢ(w·xᵢ + b) / ||w||                           │
+    │                                                                     │
+    │   The distance from point x to hyperplane:                           │
+    │   distance = |w·x + b| / ||w||                                 │
+    │                                                                     │
+    │   For support vectors (on boundary):                             │
+    │   distance = 1 / ||w||                                         │
+    │                                                                     │
+    │   Total margin = 2 / ||w||                                         │
+    │                                                                     │
+    │   MAXIMUM MARGIN = MINIMIZE ||w||² = MAXIMIZE margin          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. GEOMETRIC UNDERSTANDING
+================================================================================
+
+WHY MAXIMUM MARGIN?
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Small Margin:                                                    │
+    │   • More sensitive to noise                                        │
+    │   • May misclassify test points                                  │
+    │   • Poor generalization                                          │
+    │                                                                     │
+    │   Maximum Margin:                                                 │
+    │   • Most robust to noise                                          │
+    │   • Better generalization on test data                              │
+    │   • Maximum separation between classes                            │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+SUPPORT VECTORS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Support vectors are:                                              │
+    │   • Points closest to the hyperplane                                 │
+    │   • Points that define the margin                                   │
+    │   • Only these points matter for prediction                         │
+    │                                                                     │
+    │   Why are they important?                                        │
+    │   • Model complexity depends on # support vectors, not # features   │
+    │   • Compact model (memory efficient)                             │
+    │   • Robust - removing non-support vectors doesn't change prediction│
+    │                                                                     │
+    └────────────────────────────────────��─��──────────────────────────────┘
+
+================================================================================
+                    4. MATHEMATICAL DERIVATION
+================================================================================
+
+4.1 PRIMAL FORM
+─────────────────
+
+For linearly separable data:
+
+    Minimize: ||w||² / 2
+    
+    Subject to: yᵢ(w·xᵢ + b) ≥ 1  for all i
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Derivation:                                                      │
+    │                                                                     │
+    │   1. We want: max(distance to nearest point)                        │
+    │   2. Distance to hyperplane: |w·x + b| / ||w||                        │
+    │   3. For correctly classified: yᵢ(w·xᵢ + b) > 0                  │
+    │   4. Normalize so that closest point has margin 1:                    │
+    │      yᵢ(w·xᵢ + b) ≥ 1                                      │
+    │   5. Maximize margin = 2/||w|| → minimize ||w||                      │
+    │                                                                     │
+    │   This is a convex optimization problem!                        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+4.2 DUAL FORM
+─────────────────
+
+Using Lagrangian duality:
+
+    Maximize: Σᵢ αᵢ - (1/2) Σᵢ Σⱼ αᵢ αⱼ yᵢ yⱼ (xᵢ·xⱼ)
+    
+    Subject to: Σᵢ αᵢ yᵢ = 0 and αᵢ ≥ 0
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Key insights:                                                  │
+    │   • Only αᵢ > 0 for support vectors                            │
+    │   • w = Σᵢ αᵢ yᵢ xᵢ                                            │
+    │   • b = -½ (max yᵢ=-1 w·xᵢ + min yᵢ=+1 w·xᵢ)            │
+    │   • Decision: sign(w·x + b)                                      │
+    │                                                                     │
+    │   The kernel trick can be applied here:                           │
+    │   (xᵢ·xⱼ) → K(xᵢ, xⱼ)                                  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+4.3 KKT CONDITIONS
+─────────────────
+
+Karush-Kuhn-Tucker conditions (optimality conditions):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   For primal variables (w, b) and dual (α):                           │
+    │                                                                     │
+    │   1. Stationarity: w - Σᵢ αᵢ yᵢ xᵢ = 0                           │
+    │   2. Primal feasibility: yᵢ(w·xᵢ + b) ≥ 1                       │
+    │   3. Dual feasibility: αᵢ ≥ 0                                    │
+    │   4. Complementary slackness:                                          │
+    │      αᵢ(yᵢ(w·xᵢ + b) - 1) = 0                               │
+    │                                                                     │
+    │   Interpretation:                                              │
+    │   • If αᵢ > 0 → on margin (support vector)                   │
+    │   • If αᵢ = 0 → correctly classified, inside margin    │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    5. KERNEL TRICK
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   THE KERNEL TRICK:                                               │
+    │   ────────────────                                               │
+    │                                                                     │
+    │   Instead of computing φ(x) explicitly, compute K(x,z) directly:  │
+    │                                                                     │
+    │        K(x, z) = φ(x) · φ(z)                                   │
+    │                                                                     │
+    │   This allows working in high/d infinite dimensions without         │
+    │   explicitly computing in that space!                         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+COMMON KERNELS:
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ Kernel             │ Formula                                      │ Mapping          │
+├───────────────────┼─────────────────────────────────────────────┼────────────────┤
+│ Linear           │ K(x,z) = x·z                              │ None           │
+│ Polynomial      │ K(x,z) = (x·z + c)ᵈ                     │ Degree d      │
+│ RBF (Gaussian)   │ K(x,z) = exp(-||x-z||²/(2σ²))            │ ∞ dimensions  │
+│ Sigmoid         │ K(x,z) = tanh(αx·z + c)                    │ Neural net    │
+└──────────────────────────────────────────────���───────────────────────┘
+
+RBF KERNEL DETAIL:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   K(x, z) = exp(-||x - z||² / (2σ²))                            │
+    │                                                                     │
+    │   Parameters:                                                     │
+    │   • σ controls width of kernel                                   │
+    │   • Small σ: narrow kernel, complex boundary                 │
+    │   • Large σ: wide kernel, smooth boundary                   │
+    │                                                                     │
+    │   This is the most commonly used kernel!                  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    6. NON-LINEAR SVM
+================================================================================
+
+MAPPING TO HIGHER DIMENSION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Original space (non-linear):                               │
+    │   ●  ●                                                          │
+    │         ●                                                        │
+    │              ●  ●                                               │
+    │                                                                     │
+    │   After mapping (linear in更高 dimension):                      │
+    │                                                                     │
+    │              ╲                                                 │
+    │               ╲ ●                                            │
+    │                ╲                                              │
+    │                 ╲ ●                                           │
+    │                  ╲                                              │
+    │   ● ●            ╱ ●                                          │
+    │                  ╱                                              │
+    │                 ╱ ●                                            │
+    │                                                                     │
+    │   Now separable by hyperplane!                            │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+THE PROCESS:
+
+    1. Map data to higher dimension using φ(x)
+    2. Find optimal hyperplane in that space
+    3. Decision: sign(w·φ(x) + b)
+
+================================================================================
+                    7. SOFT MARGIN SVM
+================================================================================
+
+WHY SOFT MARGIN?
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Hard margin SVM problems:                                       │
+    │   • Requires linearly separable data                         │
+    │   • Very sensitive to outliers                            │
+    │   • Can fail when data overlaps                           │
+    │                                                                     │
+    │   Soft margin SVM:                                          │
+    │   • Allows some misclassification                          │
+    │   • Introduces slack variables (ξᵢ)                   │
+    │   • Balances margin size and errors                   │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+SOFT MARGIN FORMULATION:
+
+    Minimize: ||w||² / 2 + C Σᵢ ξᵢ
+    
+    Subject to: yᵢ(w·xᵢ + b) ≥ 1 - ξᵢ and ξᵢ ≥ 0
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   C = regularization parameter:                                   │
+    │   • Large C: small margin, few misclassifications              │
+    │   • Small C: large margin, more misclassifications          │
+    │                                                                     │
+    │   Slack variables (ξᵢ):                                     │
+    │   • ξᵢ = 0: correctly classified                          │
+    │   • 0 < ξᵢ < 1: on wrong side of margin               │
+    │   • ξᵢ ≥ 1: misclassified                                 │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    8. SVM FOR REGRESSION
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   SVM for Regression uses ε-insensitive loss:                    │
+    │                                                                     │
+    │   Loss = 0 if |y - ŷ| < ε                            │
+    │   Loss = |y - ŷ| - ε otherwise                                │
+    │                                                                     │
+    │   This ignores errors within ε-tube:                          │
+    │                                                                     │
+    │              y                                                 │
+    │              │                                                 │
+    │       ────────────────                                        │
+    │              │    ε                                          │
+    │   ● ● ● ●  │●●●●●●●●●●  ● ● ● ●                         │
+    │              │    ε                                          │
+    │              │                                                 │
+    │       ────────────────                                        │
+    │                                                                     │
+    └───────────────────────────────────���─���───────────────────────────────┘
+
+================================================================================
+                    9. IMPLEMENTATION WITH SKLEARN
+================================================================================
+
+from sklearn.svm import (
+    SVC,               # Support Vector Classification
+    SVR,               # Support Vector Regression
+)
+
+CLASSIFICATION EXAMPLE:
+
+    from sklearn.svm import SVC
+    from sklearn.datasets import make_classification
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import accuracy_score
+    
+    # Generate data
+    X, y = make_classification(n_samples=500, random_state=42)
+    
+    # Split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    
+    # Train
+    clf = SVC(
+        kernel='rbf',           # 'linear', 'poly', 'rbf', 'sigmoid'
+        C=1.0,                # Regularization
+        gamma='scale',          # Kernel coefficient
+        kernel='rbf' 
+    )
+    clf.fit(X_train, y_train)
+    
+    # Predict
+    y_pred = clf.predict(X_test)
+    print(f"Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+
+PARAMETER OPTIONS:
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ Parameter       │ Options                  │ Description                        │
+├───────────────┼───────────────────────┼──────────────────────────────────┤
+│ kernel        │ 'linear'              │ Linear hyperplane               │
+│               │ 'poly'               │ Polynomial (degree d)           │
+│               │ 'rbf' (default)       │ Gaussian/RBF                  │
+│               │ 'sigmoid'            │ Neural network-like             │
+├───────────────┼───────────────────────┼──────────────────────────────────┤
+│ C            │ 0.01, 0.1, 1, 10, 100 │ Regularization            │
+├───────────────┼───────────────────────┼──────────────────────────────────┤
+│ gamma        │ 'scale', 'auto'       │ RBF kernel coefficient         │
+│               │ positive number         │ For rbf kernel               │
+├───────────────┼───────────────────────┼──────────────────────────────────┤
+│ degree       │ 1, 2, 3, ...         │ For polynomial kernel         │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    10. COMPLETE CODE EXAMPLES
+================================================================================
+
+================================================================================
+EXAMPLE 1: Linear SVM Classification
+================================================================================
+
+from sklearn.svm import SVC
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+print("="*70)
+print("EXAMPLE 1: Linear SVM - Classification")
+print("="*70)
+
+# Generate linearly separable data
+X, y = make_classification(n_samples=500, n_features=2, class_sep=2, random_state=42)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+# Train linear SVM
+clf = SVC(kernel='linear', C=1.0)
+clf.fit(X_train, y_train)
+
+# Predict
+y_pred = clf.predict(X_test)
+
+print(f"\n📊 Linear SVM Results:")
+print(f"   Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+print(f"   Support vectors: {clf.n_support_}")
+print(f"   Total support vectors: {sum(clf.n_support_)}")
+
+================================================================================
+EXAMPLE 2: RBF Kernel
+================================================================================
+
+from sklearn.svm import SVC
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+
+print("\n" + "="*70)
+print("EXAMPLE 2: RBF Kernel - Non-linear Data")
+print("="*70)
+
+# Generate moon-shaped data (non-linear)
+X, y = make_moons(n_samples=500, noise=0.1, random_state=42)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+# Compare kernels
+print("\n📊 Kernel Comparison:")
+print("-" * 50)
+
+for kernel in ['linear', 'poly', 'rbf', 'sigmoid']:
+    clf = SVC(kernel=kernel)
+    clf.fit(X_train, y_train)
+    acc = clf.score(X_test, y_test)
+    n_sv = clf.n_support_.sum()
+    print(f"   {kernel:<10}: Accuracy = {acc:.4f}, SV = {n_sv}")
+
+================================================================================
+EXAMPLE 3: Tuning C Parameter
+================================================================================
+
+from sklearn.svm import SVC
+from sklearn.datasets import make_classification
+from sklearn.model_selection import GridSearchCV
+
+print("\n" + "="*70)
+print("EXAMPLE 3: Tuning C Parameter")
+print("="*70)
+
+# Generate data
+X, y = make_classification(n_samples=500, random_state=42)
+
+# Grid search
+param_grid = {'C': [0.01, 0.1, 1, 10, 100]}
+
+grid = GridSearchCV(SVC(kernel='rbf'), param_grid, cv=5)
+grid.fit(X, y)
+
+print(f"\n✅ Best C: {grid.best_params_['C']}")
+print(f"   Best CV Score: {grid.best_score_:.4f}")
+
+# Effect of C
+print("\n📊 C Effect:")
+print("-" * 40)
+
+for c in [0.01, 0.1, 1, 10, 100]:
+    clf = SVC(C=c)
+    clf.fit(X, y)
+    n_sv = clf.n_support_.sum()
+    print(f"   C={c:>6}: SV = {n_sv}")
+
+================================================================================
+EXAMPLE 4: Different RBF gamma
+================================================================================
+
+from sklearn.svm import SVC
+from sklearn.datasets import make_moons
+
+print("\n" + "="*70)
+print("EXAMPLE 4: RBF gamma Effect")
+print("="*70)
+
+X, y = make_moons(n_samples=500, noise=0.1)
+
+print("\n📊 Gamma Effect:")
+print("-" * 50)
+
+for gamma in ['scale', 'auto', 0.01, 0.1, 1, 10]:
+    clf = SVC(kernel='rbf', gamma=gamma)
+    clf.fit(X, y)
+    acc = clf.score(X, y)
+    n_sv = clf.n_support_.sum()
+    print(f"   gamma={str(gamma):>6}: Acc = {acc:.4f}, SV = {n_sv}")
+
+print("\nNote: gamma controls model complexity")
+print("  small gamma: underfitting")
+print("  large gamma: overfitting")
+
+================================================================================
+EXAMPLE 5: Polynomial Kernel
+================================================================================
+
+from sklearn.svm import SVC
+
+print("\n" + "="*70)
+print("EXAMPLE 5: Polynomial Kernel")
+print("="*70)
+
+X, y = make_moons(n_samples=500, noise=0.15)
+
+print("\n📊 Polynomial Degree:")
+print("-" * 40)
+
+for degree in [1, 2, 3, 4, 5]:
+    clf = SVC(kernel='poly', degree=degree)
+    clf.fit(X, y)
+    acc = clf.score(X, y)
+    print(f"   degree={degree}: Accuracy = {acc:.4f}")
+
+================================================================================
+EXAMPLE 6: SVM Regression
+================================================================================
+
+from sklearn.svm import SVR
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+
+print("\n" + "="*70)
+print("EXAMPLE 6: SVM Regression")
+print("="*70)
+
+# Generate regression data
+X, y = make_regression(n_samples=500, n_features=5, noise=10, random_state=42)
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+# Train
+reg = SVR(kernel='rbf')
+reg.fit(X_train, y_train)
+
+# Predict
+y_pred = reg.predict(X_test)
+
+print(f"\n📊 SVM Regression Results:")
+print(f"   MSE: {mean_squared_error(y_test, y_pred):.4f}")
+print(f"   RMSE: {np.sqrt(mean_squared_error(y_test, y_pred)):.4f}")
+print(f"   R²: {r2_score(y_test, y_pred):.4f}")
+
+# Compare kernels
+print("\n📊 Kernel Comparison:")
+print("-" * 40)
+
+for kernel in ['linear', 'rbf', 'poly']:
+    reg = SVR(kernel=kernel)
+    reg.fit(X_train, y_train)
+    r2 = r2_score(y_test, reg.predict(X_test))
+    print(f"   {kernel:<10}: R² = {r2:.4f}")
+
+================================================================================
+EXAMPLE 7: Feature Importance via Weights
+================================================================================
+
+from sklearn.svm import SVC
+
+print("\n" + "="*70)
+print("EXAMPLE 7: Linear SVM Feature Weights")
+print("="*70)
+
+# Generate data
+X, y = make_classification(n_samples=500, n_features=10, random_state=42)
+
+# Train linear SVM
+clf = SVC(kernel='linear')
+clf.fit(X, y)
+
+# Feature weights
+weights = clf.coef_[0]
+
+print("\n📊 Feature Weights (Linear SVM):")
+print("-" * 50)
+
+for i, w in enumerate(weights):
+    bar = "█" * int(np.abs(w) * 10)
+    sign = "+" if w > 0 else "-"
+    print(f"   Feature {i:>2}: {sign}{bar} {w:.4f}")
+
+================================================================================
+                    SUMMARY
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                SUPPORT VECTOR MACHINES SUMMARY                      │
+    ├─────────────────────────────────────────────────────────────────────┤
+    │                                                                     │
+    │   WHAT IT DOES:                                                 │
+    │   Finds maximum margin hyperplane to separate classes               │
+    │                                                                     │
+    │   KEY CONCEPTS:                                               │
+    │   • Hyperplane: w·x + b = 0                                  │
+    │   • Margin: distance to nearest points                      │
+    │   • Support vectors: defining boundary points            │
+    │   • Kernel trick: implicit mapping to higher dimensions    │
+    │                                                                     │
+    │   KERNELS:                                                  │
+    │   • Linear: simple hyperplane                               │
+    │   • Polynomial: degree d polynomial                     │
+    │   • RBF (Gaussian): most flexible, most popular            │
+    │   • Sigmoid: neural network-like                        │
+    │                                                                     │
+    │   PROS:                                                       │
+    │   ✓ Effective in high dimensions                          │
+    │   ✓ Memory efficient (depends on support vectors)      │
+    │   ✓ Versatile (via kernels)                           │
+    │   ✓ Robust to outliers (soft margin)                 │
+    │                                                                     │
+    │   CONS:                                                       │
+    │   ✗ Doesn't scale well to large datasets               │
+    │   ✗ Sensitive to feature scaling                    │
+    │   ✗ No probability estimates (need Platt scaling)      │
+    │   ✗ Can be slow with RBF kernel                         │
+    │                                                                     │
+    │   BEST FOR:                                                   │
+    │   • Medium-sized datasets                               │
+    │   • Non-linear classification (use RBF kernel)           │
+    │   • When interpretability not critical                │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================
