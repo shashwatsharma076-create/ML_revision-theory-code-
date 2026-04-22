@@ -12,6 +12,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [K-Nearest Neighbors (KNN)](./KNN_Complete_Guide.txt) ✅ - Classification, Regression, Distance Metrics
 - [Decision Trees](./Decision_Trees_Complete_Guide.txt) ✅ - Entropy, Gini, Pruning, Regression
 - [Support Vector Machines (SVM)](./SVM_Complete_Guide.txt) ✅ - Kernel Trick, RBF, Classification, Regression
+- [Naive Bayes](./Naive_Bayes_Complete_Guide.txt) ✅ - Gaussian, Multinomial, Bernoulli, Complement
 - [Random Forests](./notebooks/04_random_forests.md) (Coming Soon)
 
 ### Unsupervised Learning
@@ -123,3 +124,16 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 8. sklearn Implementation (Classification & Regression)
 9. Parameter Tuning (C, gamma, degree)
 10. Feature Importance via Linear SVM Weights
+
+## Naive Bayes Sub-topics ✅
+
+1. Introduction to Naive Bayes & Bayes Theorem
+2. Naive Independence Assumption
+3. Gaussian Naive Bayes (Continuous Features)
+4. Multinomial Naive Bayes (Count Data/Text)
+5. Bernoulli Naive Bayes (Binary Features)
+6. Complement Naive Bayes (Imbalanced Data)
+7. Mathematical Derivation
+8. Laplace Smoothing
+9. sklearn Implementation (Iris, Wine datasets)
+10. Practical Text Classification (Spam Detection)
