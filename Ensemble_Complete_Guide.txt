@@ -1,0 +1,674 @@
+================================================================================
+                    ENSEMBLE METHODS
+                Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                        TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to Ensemble Methods
+2. Why Ensemble Methods Work
+3. Types of Ensemble Methods
+   3.1 Bagging (Bootstrap Aggregation)
+   3.2 Random Forests
+   3.3 Boosting
+   3.4 AdaBoost
+   3.5 Gradient Boosting
+   3.6 XGBoost/LightGBM
+   3.7 Voting
+   3.8 Stacking
+4. Mathematical Derivations
+5. Implementation with sklearn
+6. Complete Code Examples
+
+================================================================================
+                    1. INTRODUCTION TO ENSEMBLE METHODS
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │               ENSEMBLE METHODS                                      │
+    │               ──────────────────                                     │
+    │                                                                     │
+    │   Combine multiple models to create a stronger model.              │
+    │   "The wisdom of the crowd" in machine learning!                  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KEY IDEA:
+
+    Instead of training one complex model, train multiple simple
+    models and combine their predictions.
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Individual Models (Weak Learners):                              │
+    │   Model 1 ──┐                                                     │
+    │   Model 2 ──┼──► Combined ─► Final Prediction                    │
+    │   Model 3 ──┘                                                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+WHY ENSEMBLE METHODS WORK:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   VARIANCE REDUCTION:                                             │
+    │   • Averaging reduces variance of predictions                       │
+    │   • Var(avg) = Var(X)/n for independent models                  │
+    │                                                                     │
+    │   BIAS REDUCTION (Boosting):                                      │
+    │   • Sequential models focus on errors                           │
+    │   • Each model fixes previous mistakes                           │
+    │                                                                     │
+    │   DECORRELATION (Random Forests):                               │
+    │   • Different subsets of data/features                        │
+    │   • Models make different errors                             │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    2. WHY ENSEMBLE METHODS WORK
+================================================================================
+
+THE MATHEMATICS:
+
+For averaging n independent predictions with same variance σ²:
+    
+    Variance of average = σ²/n
+    
+    → More models = less variance = more stable predictions!
+
+ERROR DECOMPOSITION:
+
+    Total Error = Bias² + Variance + Irreducible Error
+    
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   High Variance (overfitting):                                   │
+    │   ──────────────────────────────────────────                     │
+    │   Individual models: Large error on test data                   │
+    │   Ensemble: Smaller error (averaged)                             │
+    │   ──────────────────────────────────────────                     │
+    │   High Bias (underfitting):                                     │
+    │   Ensemble can reduce bias (not just variance!)                 │
+    │   ──────────────────────────────────────────                     │
+    │   Key: Weak learners must be "slightly better than random"     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. TYPES OF ENSEMBLE METHODS
+================================================================================
+
+3.1 BAGGING (BOOTSTRAP AGGREGATION)
+──────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   BAGGING Algorithm:                                               │
+    │   ─────────────────────────────────                                │
+    │   1. Create n bootstrap samples from training data             │
+    │   2. Train a model on each bootstrap sample                   │
+    │   3. Combine predictions (majority vote for classification,    │
+    │      average for regression)                                   │
+    │                                                                     │
+    │   BOOTSTRAP: Random sampling with replacement                   │
+    │   Each sample ~ 63% unique (1 - 1/e)                            │
+    │                                                                     │
+    │   KEY BENEFIT: Reduces variance without increasing bias        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.2 RANDOM FORESTS
+────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   RANDOM FOREST = Bagging + Feature Randomness                       │
+    │   ─────────────────────────────────────────────────────            │
+    │                                                                     │
+    │   Algorithm:                                                     │
+    │   1. For each tree:                                             │
+    │      a. Bootstrap sample from data                                 │
+    │      b. Random subset of features at each split                    │
+    │      c. Find best split using only those features                   │
+    │   2. Combine predictions                                       │
+    │                                                                     │
+    │   EXTRA RANDOMNESS: At each split, only consider m features      │
+    │   • m = √p for classification                                  │
+    │   • m = p/3 for regression                                     │
+    │                                                                     │
+    │   KEY BENEFITS:                                                  │
+    │   ✓ Decorrelated trees (different errors)                       │
+    │   ✓ Handles high dimensionality well                          │
+    │   ✓ Robust to outliers                                         │
+    │   ✓ Provides feature importance                               │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.3 BOOSTING
+─────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   BOOSTING: Sequential learning                               │
+    │   ────────────────                                              │
+    │   Train models sequentially:                                   │
+    │   • Each model focuses on previous mistakes                    │
+    │   • Combine with weights                                      │
+    │                                                                     │
+    │   KEY DIFFERENCE FROM BAGGING:                                  │
+    │   • Bagging: parallel, independent                            │
+    │   • Boosting: sequential, dependent                            │
+    │                                                                     │
+    │   TYPES:                                                        │
+    │   • AdaBoost: focus on misclassified points                    │
+    │   • Gradient Boosting: function optimization                  │
+    │   • XGBoost/LightGBM: optimized implementations              │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.4 ADABOOST
+─────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ADAPTIVE BOOSTING (AdaBoost):                                    │
+    │   ─────────────────────────────────────                          │
+    │                                                                     │
+    │   Algorithm:                                                    │
+    │   1. Initialize sample weights equally                          │
+    │   2. For m = 1 to M:                                          │
+    │      a. Train weak learner on weighted data                  │
+    │      b. Compute weighted error ε                              │
+    │      c. Compute learner weight α = ½ log((1-ε)/ε)             │
+    │      d. Update sample weights: wᵢ × exp(-αyᵢh(xᵢ))           │
+    │   3. Final: H(x) = sign(Σ αₘhₘ(x))                           │
+    │                                                                     │
+    │   SAMPLE WEIGHT UPDATE:                                         │
+    │   • Misclassified → INCREASE weight                            │
+    │   • Correctly classified → DECREASE weight                   │
+    │                                                                     │
+    │   The weight formula ensures:                                   │
+    │   ε < 0.5 → α > 0 (correct direction)                       │
+    │   ε = 0.5 → α = 0 (random, reject)                          │
+    │   ε > 0.5 → α < 0 (wrong direction)                         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.5 GRADIENT BOOSTING
+─────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   GRADIENT BOOSTING:                                               │
+    │   ──────────────────                                              │
+    │                                                                     │
+    │   View as function optimization:                                   │
+    │   Minimize: L(y, F(x)) where L = loss function                    │
+    │                                                                     │
+    │   Algorithm:                                                    │
+    │   1. Initialize F₀(x) = argmin Σ L(yᵢ, c)                       │
+    │   2. For m = 1 to M:                                              │
+    │      a. Compute pseudo-residuals:                               │
+    │         rᵢₘ = -∂L/∂F(yᵢ, F(xᵢ)) at F=Fₘ₋₁                       │
+    │      b. Fit pseudo-residuals with tree hₘ                         │
+    │      c. Update: Fₘ = Fₘ₋₁ + η·hₘ                               │
+    │   3. Final: F(x) = Σ ηₘhₘ(x)                                     │
+    │                                                                     │
+    │   WHERE η = learning rate (shrinkage)                           │
+    │                                                                     │
+    │   COMMON LOSS FUNCTIONS:                                          │
+    │   • Squared error: L = (y - F)²                                  │
+    │   • Absolute error: L = |y - F|                                   │
+    │   • Logistic: L = log(1 + exp(-yF))                             │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.6 XGBOOST/LIGHTGBM
+────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   XGBOOST (eXtreme Gradient Boosting):                          │
+    │   ─────────────────────────────────────                            │
+    │   • Regularized objective:                                     │
+    │     L = Σ L(yᵢ, F(xᵢ)) + Ω(f)                                    │
+    │     where Ω = γT + ½λ||w||² (regularization)                       │
+    │   • Tree pruning: max_depth with γ_min_loss                  │
+    │   • Second-order gradient (faster than Gradient Boosting)    │
+    │                                                                     │
+    │   LIGHTGBM:                                                       │
+    │   ───────────                                                    │
+    │   • Gradient-based one-side sampling (GOSS)                    │
+    │   • Exclusive Feature Bundling (EFB)                           │
+    │   • Leaf-wise tree growth (vs level-wise)                       │
+    │   • Faster than XGBoost for large datasets                    │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.7 VOTING
+───────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   VOTING ENSEMBLE:                                                │
+    │   ────────────────                                                │
+    │   • Hard Voting: majority vote                                    │
+    │   • Soft Voting: weighted average of probabilities                 ��
+    │                                                                     │
+    │   HARD VOTING:                                                   │
+    │   final = most frequent prediction                             │
+    │                                                                     │
+    │   SOFT VOTING:                                                   │
+    │   final = argmax Σ Pᵢ(class)                                    │
+    │   Better when models output probabilities                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+3.8 STACKING
+────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   STACKING (Stacked Generalization):                             │
+    │   ─────────────────────────────────                              │
+    │   TWO LEVELS:                                                   │
+    │   • Level 0: Base models (learn from data)                     │
+    │   • Level 1: Meta-model (learn from Level 0 predictions)         │
+    │                                                                     │
+    │   Algorithm:                                                    │
+    │   1. Train base models on training data                         │
+    │   2. Generate out-of-fold predictions                          │
+    │   3. Train meta-model on predictions                          │
+    │   4. For prediction: base predictions → meta → final          │
+    │                                                                     │
+    │   COMMON BASE MODELS:                                            │
+    │   Different algorithms work best!                              │
+    │   • Linear regression + Decision tree + SVM                    │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    4. MATHEMATICAL DERIVATIONS
+================================================================================
+
+BAGGING VARIANCE REDUCTION:
+
+    Let X₁, X₂, ..., Xₙ be n predictions with same variance σ²
+    and mean μ. Then:
+    
+    Var(average) = Cov(avg, avg)
+                = (1/n²) Σ Cov(Xᵢ, Xⱼ)
+                = (1/n²) [nσ² + (n²-n)ρσ²]
+                = σ²/n + (1-1/n)ρσ²
+            
+    If ρ = 0 (independent): Var = σ²/n
+    If ρ > 0: Still reduces variance by averaging
+
+ADABOOST WEIGHT UPDATE:
+
+    Let α = ½ log((1-ε)/ε)
+    
+    For correctly classified (y = h(x)):
+    w_new = w × exp(-α × 1) = w × exp(-α)
+    
+    For misclassified (y ≠ h(x)):
+    w_new = w × exp(α) = w × exp(α)
+    
+    Since ε < 0.5 → (1-ε)/ε > 1 → α > 0
+    
+    Therefore:
+    Correct: weight decreases
+    Wrong: weight increases
+
+GRADIENT BOOSTING PSEUDO-RESIDUALS:
+
+    For squared error loss L = (y - F)²:
+    
+    rᵢ = -∂L/∂F = 2(yᵢ - F(xᵢ))
+    
+    Fit tree h to residuals rᵢ
+    
+    Update: F_new = F_old + η × h
+    
+    For new F: residual ≈ 0
+
+================================================================================
+                    5. IMPLEMENTATION WITH SKLEARN
+================================================================================
+
+RANDOM FOREST:
+
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.datasets import make_classification
+    
+    clf = RandomForestClassifier(
+        n_estimators=100,      # Number of trees
+        max_depth=None,         # Maximum depth
+        min_samples_leaf=1,    # Min samples in leaf
+        max_features='sqrt',   # Features at each split
+        bootstrap=True,        # Use bootstrap
+        random_state=42
+    )
+    
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    importance = clf.feature_importances_
+
+BOOSTING:
+
+    from sklearn.ensemble import (
+        AdaBoostClassifier,
+        GradientBoostingClassifier
+    )
+    
+    # AdaBoost
+    clf = AdaBoostClassifier(
+        n_estimators=100,
+        learning_rate=1.0,
+        random_state=42
+    )
+    
+    # Gradient Boosting
+    clf = GradientBoostingClassifier(
+        n_estimators=100,
+        learning_rate=0.1,
+        max_depth=3,
+        random_state=42
+    )
+
+VOTING:
+
+    from sklearn.ensemble import VotingClassifier
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.svm import SVC
+    
+    clf = VotingClassifier(
+        estimators=[
+            ('lr', LogisticRegression()),
+            ('dt', DecisionTreeClassifier()),
+            ('svc', SVC())
+        ],
+        voting='hard'  # or 'soft'
+    )
+
+STACKING:
+
+    from sklearn.ensemble import StackingClassifier
+    from sklearn.linear_model import LogisticRegression
+    
+    clf = StackingClassifier(
+        estimators=[
+            ('lr', LogisticRegression()),
+            ('dt', DecisionTreeClassifier())
+        ],
+        final_estimator=LogisticRegression(),
+        cv=5
+    )
+
+================================================================================
+                    6. COMPLETE CODE EXAMPLES
+================================================================================
+
+================================================================================
+EXAMPLE 1: Random Forest - Classification
+================================================================================
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+print("="*70)
+print("EXAMPLE 1: Random Forest - Classification")
+print("="*70)
+
+X, y = make_classification(n_samples=500, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+print(f"\n📊 Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+print(f"   Number of trees: {clf.n_estimators}")
+print(f"   Feature importance: {clf.feature_importances_[:5]}")
+
+================================================================================
+EXAMPLE 2: Random Forest - Regression
+================================================================================
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.datasets import make_regression
+from sklearn.metrics import r2_score
+
+print("\n" + "="*70)
+print("EXAMPLE 2: Random Forest - Regression")
+print("="*70)
+
+X, y = make_regression(n_samples=500, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+reg = RandomForestRegressor(n_estimators=100, random_state=42)
+reg.fit(X_train, y_train)
+
+y_pred = reg.predict(X_test)
+print(f"\n📊 R² Score: {r2_score(y_test, y_pred):.4f}")
+print(f"   Number of trees: {reg.n_estimators}")
+
+================================================================================
+EXAMPLE 3: AdaBoost
+================================================================================
+
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.datasets import make_classification
+from sklearn.tree import DecisionTreeClassifier
+
+print("\n" + "="*70)
+print("EXAMPLE 3: AdaBoost")
+print("="*70)
+
+X, y = make_classification(n_samples=500, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+clf = AdaBoostClassifier(
+    n_estimators=100,
+    learning_rate=1.0,
+    random_state=42
+)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+print(f"\n📊 Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+print(f"   Estimators: {clf.n_estimators}")
+print(f"   Learning rate: {clf.learning_rate}")
+
+================================================================================
+EXAMPLE 4: Gradient Boosting
+================================================================================
+
+from sklearn.ensemble import GradientBoostingClassifier
+
+print("\n" + "="*70)
+print("EXAMPLE 4: Gradient Boosting")
+print("="*70)
+
+X, y = make_classification(n_samples=500, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+clf = GradientBoostingClassifier(
+    n_estimators=100,
+    learning_rate=0.1,
+    max_depth=3,
+    random_state=42
+)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+print(f"\n📊 Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+print(f"   Training stages: {clf.n_estimators}")
+
+================================================================================
+EXAMPLE 5: Voting Classifier
+================================================================================
+
+from sklearn.ensemble import VotingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+
+print("\n" + "="*70)
+print("EXAMPLE 5: Voting Classifier")
+print("="*70)
+
+X, y = make_classification(n_samples=300, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+clf = VotingClassifier(
+    estimators=[
+        ('lr', LogisticRegression()),
+        ('dt', DecisionTreeClassifier()),
+        ('svc', SVC())
+    ],
+    voting='hard'
+)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+print(f"\n📊 Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+
+# Compare with individual models
+for name, model in clf.named_estimators_.items():
+    acc = accuracy_score(y_test, model.predict(X_test))
+    print(f"   {name}: {acc:.4f}")
+
+================================================================================
+EXAMPLE 6: Stacking
+================================================================================
+
+from sklearn.ensemble import StackingClassifier
+
+print("\n" + "="*70)
+print("EXAMPLE 6: Stacking")
+print("="*70)
+
+X, y = make_classification(n_samples=300, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+clf = StackingClassifier(
+    estimators=[
+        ('lr', LogisticRegression()),
+        ('dt', DecisionTreeClassifier())
+    ],
+    final_estimator=LogisticRegression(),
+    cv=5
+)
+clf.fit(X_train, y_train)
+
+y_pred = clf.predict(X_test)
+print(f"\n📊 Accuracy: {accuracy_score(y_test, y_pred):.4f}")
+
+================================================================================
+EXAMPLE 7: Compare All Ensemble Methods
+================================================================================
+
+from sklearn.ensemble import (
+    RandomForestClassifier,
+    AdaBoostClassifier,
+    GradientBoostingClassifier,
+    BaggingClassifier
+)
+from sklearn.datasets import make_classification
+
+print("\n" + "="*70)
+print("EXAMPLE 7: Compare Ensemble Methods")
+print("="*70)
+
+X, y = make_classification(n_samples=500, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+classifiers = {
+    'Random Forest': RandomForestClassifier(n_estimators=50, random_state=42),
+    'AdaBoost': AdaBoostClassifier(n_estimators=50, random_state=42),
+    'Gradient Boosting': GradientBoostingClassifier(n_estimators=50, random_state=42),
+    'Bagging': BaggingClassifier(n_estimators=50, random_state=42)
+}
+
+print("\n📊 Comparison:")
+print("-" * 40)
+for name, clf in classifiers.items():
+    clf.fit(X_train, y_train)
+    acc = accuracy_score(y_test, clf.predict(X_test))
+    print(f"   {name:<20}: {acc:.4f}")
+
+================================================================================
+EXAMPLE 8: Feature Importance
+================================================================================
+
+from sklearn.ensemble import RandomForestClassifier
+
+print("\n" + "="*70)
+print("EXAMPLE 8: Feature Importance - Random Forest")
+print("="*70)
+
+X, y = make_classification(n_samples=500, n_features=10, n_informative=5, random_state=42)
+
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(X, y)
+
+importance = clf.feature_importances_
+indices = importance.argsort()[::-1]
+
+print("\n📊 Top Features:")
+for i in range(10):
+    idx = indices[i]
+    bar = "█" * int(importance[idx] * 20)
+    print(f"   Feature {idx:<3}: {bar} {importance[idx]:.4f}")
+
+================================================================================
+                    SUMMARY
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                    ENSEMBLE METHODS SUMMARY                       │
+    ├─────────────────────────────────────────────────────────────────────┤
+    │                                                                     │
+    │   WHAT IT DOES:                                                 │
+    │   Combine multiple models for better predictions                  │
+    │                                                                     │
+    │   TYPES:                                                       │
+    │   • Bagging: Parallel, reduce variance                           │
+    │   • Random Forest: Bagging + feature randomness                │
+    │   • Boosting: Sequential, reduce bias                           │
+    │   • AdaBoost: Reweight samples                                  │
+    │   • Gradient Boosting: Optimize loss function                  │
+    │   • Voting: Combine predictions                                 │
+    │   • Stacking: Meta-learner on base predictions                 │
+    │                                                                     │
+    │   PROS:                                                       │
+    │   ✓ Reduces variance & bias                                    │
+    │   ✓ Handles complex patterns                                    │
+    │   ✓ Provides feature importance                               │
+    │   ✓ Robust to outliers                                           │
+    │                                                                     │
+    │   CONS:                                                       │
+    │   ✗ Slower training/prediction                               │
+    │   ✗ Less interpretable                                        │
+    │   ✗ More memory                                                │
+    │                                                                     │
+    │   BEST FOR:                                                     │
+    │   • Tabular data (Random Forest, XGBoost usually best)           │
+    │   • Structured data                                            │
+    │   • Kaggle competitions                                        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================
