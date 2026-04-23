@@ -13,7 +13,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [Decision Trees](./Decision_Trees_Complete_Guide.txt) ✅ - Entropy, Gini, Pruning, Regression
 - [Support Vector Machines (SVM)](./SVM_Complete_Guide.txt) ✅ - Kernel Trick, RBF, Classification, Regression
 - [Naive Bayes](./Naive_Bayes_Complete_Guide.txt) ✅ - Gaussian, Multinomial, Bernoulli, Complement
-- [Random Forests](./notebooks/04_random_forests.md) (Coming Soon)
+- [Ensemble Methods](./Ensemble_Complete_Guide.txt) ✅ - Random Forest, Boosting, Voting, Stacking
 
 ### Unsupervised Learning
 - [Clustering](./notebooks/06_clustering.md) (Coming Soon)
@@ -137,3 +137,19 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 8. Laplace Smoothing
 9. sklearn Implementation (Iris, Wine datasets)
 10. Practical Text Classification (Spam Detection)
+
+## Ensemble Methods Sub-topics ✅
+
+1. Introduction to Ensemble Methods (Wisdom of Crowd)
+2. Why Ensemble Methods Work (Variance Reduction)
+3. Bagging (Bootstrap Aggregation)
+4. Random Forests (Bagging + Feature Randomness)
+5. Extra Trees (Random Splits)
+6. Boosting (Sequential Learning)
+7. AdaBoost (Reweight Samples)
+8. Gradient Boosting (Optimize Loss Function)
+9. XGBoost/LightGBM (Optimized Implementations)
+10. Voting Classifier (Combine Predictions)
+11. Stacking (Meta-learner)
+12. sklearn Implementation
+13. Comparison of All Methods
