@@ -1,0 +1,481 @@
+================================================================================
+                    CLUSTERING
+                Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                        TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to Clustering
+2. Types of Clustering
+   2.1 K-Means Clustering
+   2.2 Hierarchical Clustering
+   2.3 DBSCAN
+   2.4 Gaussian Mixture Models
+3. Distance Metrics
+4. Evaluation Metrics
+5. Implementation with sklearn
+6. Complete Code Examples
+
+================================================================================
+                    1. INTRODUCTION TO CLUSTERING
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │                   CLUSTERING                                       │
+    │                   ──────────                                        │
+    │                                                                     │
+    │   Unsupervised learning - no labels!                                │
+    │   Group similar data points together                                 │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KEY DIFFERENCE FROM CLASSIFICATION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  CLASSIFICATION (Supervised)    │  CLUSTERING (Unsupervised)       │
+    ├─────────────────────────────────┼───────────────────────────────────┤
+    │  Labels required               │  No labels needed                │
+    │  Predetermined classes       │  Number of clusters may vary      │
+    │  Train/test split needed    │  No split needed                │
+    │  Evaluation possible         │  Harder to evaluate              │
+    └──────────────────────────────┴──────────────────────────────────┘
+
+USE CASES:
+
+    • Customer segmentation
+    • Image compression
+    • Anomaly detection
+    • Document organization
+    • Market basket analysis
+
+================================================================================
+                    2. TYPES OF CLUSTERING
+================================================================================
+
+2.1 K-MEANS CLUSTERING
+─────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Algorithm:                                                     │
+    │   ─────────────────────────────────────────────────────────────     │
+    │   1. Initialize K cluster centroids                             │
+    │   2. Assign each point to nearest centroid                     │
+    │   3. Update centroids as mean of assigned points                │
+    │   4. Repeat until convergence                                      │
+    │                                                                     │
+    │   Objective: Minimize within-cluster sum of squares (WCSS):     │
+    │   WCSS = Σ Σ ||xᵢ - μⱼ||²                                         │
+    │   (for all points i in cluster j)                                  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+INITIALIZATION METHODS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │  • Random Initialize: Pick random points as centroids             │
+    │  • K-Means++: Pick first centroid randomly, then                 │
+    │    pick subsequent centroids with probability                    │
+    │    proportional to distance squared                               │
+    │  • Mini-batch K-Means: Use randommini-batches                    │
+    │    for faster convergence                                         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+K-MEANS++ BETTER INITIALIZATION:
+
+    Step 1: Pick first centroid randomly
+    Step 2: For each point, compute D² (distance to nearest centroid)
+    Step 3: Pick next centroid with probability D² / Σ D²
+    Step 4: Repeat until K centroids selected
+
+    This ensures centroids are spread out, leading to better
+    convergence and often better clustering!
+
+ELBOW METHOD FOR CHOOSING K:
+
+    Plot WCSS vs number of clusters:
+    
+    WCSS
+      │
+      │     ╲
+      │      ╲__
+      │         ╲___
+      │            ╲___
+      │               ╲___
+      │                  ╲___
+      │                     ╲___
+      │                        ╲___
+      └──────────────────────────────────→ K
+                                (look for "elbow" point)
+
+2.2 HIERARCHICAL CLUSTERING
+───────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   TWO APPROACHES:                                                  │
+    │   • Agglomerative (bottom-up): Start with each point, merge         │
+    │   • Divisive (top-down): Start with one cluster, split               │
+    │                                                                     │
+    │   LINKAGE METHODS:                                                 │
+    │   • Single Linkage: Closest points                                │
+    │   �� Complete Linkage: Furthest points                            │
+    │   • Average Linkage: Mean distance                                │
+    │   • Ward: Minimize increase in variance                           │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+DENDROGRAM:
+
+    Visual representation of hierarchical clustering
+    
+            ╱─A
+          ╱
+        ╱─B──C
+      ╱
+    ╱──D──E
+    F
+    │
+    └── Time/distance →
+
+2.3 DBSCAN (DENSITY-BASED CLUSTERING)
+────────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   DBSCAN = Density-Based Spatial Clustering of                     │
+    │   Applications with Noise                                          │
+    │                                                                     │
+    │   Core Point: Has ≥minPts within radius ε                          │
+    │   Reachable: Can reach core point via chain of core points           │
+    │   Noise: Not reachable from any core point                        │
+    │                                                                     │
+    │   Parameters:                                                    │
+    │   • ε (eps): Neighborhood radius                                │
+    │   • minPts: Minimum points for core point                       │
+    │                                                                     │
+    │   Advantages:                                                    │
+    │   ✓ Finds arbitrary-shaped clusters                              │
+    │   ✓ Identifies outliers (noise)                                 │
+    │   ✓ No need to specify number of clusters                        │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+EPSILON (ε) SELECTION:
+
+    Use k-distance graph:
+    - Plot distance to kth nearest neighbor
+    - Look for "elbow" point
+
+2.4 GAUSSIAN MIXTURE MODELS (GMM)
+───────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Probabilistic clustering - soft assignments                        │
+    │                                                                     │
+    │   P(x) = Σ πₖ N(x|μₖ,Σₖ)                                          │
+    │                                                                     │
+    │   Each cluster is a Gaussian with:                                 │
+    │   • Mean (μ)                                                     │
+    │   • Covariance (Σ)                                                │
+    │   • Mixing coefficient (π)                                        │
+    │                                                                     │
+    │   Soft clustering - each point has probability                     │
+    │   of belonging to each cluster                                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. DISTANCE METRICS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ METRIC                     │ FORMULA                                      │
+├───────────────────────────┼─────────────────────────────────────────────┤
+│ Euclidean                │ √[(x₁-y₁)² + (x₂-y₂)²]                      │
+│ Manhattan                │ |x₁-y₁| + |x₂-y₂|                            │
+│ Cosine Similarity         │ (x·y) / (||x|| × ||y||)                    │
+│ Cosine Distance           │ 1 - Cosine Similarity                      │
+│ Pearson Correlation     │ Cov(x,y) / (σx × σy)                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    4. EVALUATION METRICS
+================================================================================
+
+INTERNAL METRICS (no labels):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   SILHOUETTE SCORE:                                                │
+    │   s = (b - a) / max(a, b)                                        │
+    │   where a = avg distance to same cluster                              │
+    │         b = avg distance to nearest cluster                         │
+    │   Range: -1 to 1 (higher is better)                               │
+    │                                                                     │
+    │   DAVIES-BOULDIN INDEX:                                             │
+    │   Lower is better                                                 │
+    │   Measures cluster separation and compactness                        │
+    │                                                                     │
+    │   CALINSKI-HARABASZ INDEX:                                        │
+    │   Higher is better                                                 │
+    │   Ratio of between-cluster to within-cluster variance            │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+EXTERNAL METRICS (with labels):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ADJUSTED RAND INDEX (ARI):                                        │
+    │   Adjusted for chance                                             │
+    │   Range: -1 to 1 (1 is perfect)                                    │
+    │                                                                     │
+    │   V-MEASURE:                                                       │
+    │   Combines Homogeneity and Completeness                           │
+    │   = 2 × (precision × recall) / (precision + recall)             │
+    │                                                                     │
+    │   FOWLKES-MALLOWS:                                                │
+    │   Geometric mean of precision and recall                         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    5. IMPLEMENTATION WITH SKLEARN
+================================================================================
+
+K-MEANS:
+
+    from sklearn.cluster import KMeans
+    import numpy as np
+    
+    kmeans = KMeans(n_clusters=3, init='k-means++', n_init=10, random_state=42)
+    labels = kmeans.fit_predict(X)
+    centroids = kmeans.cluster_centers_
+
+HIERARCHICAL:
+
+    from scipy.cluster.hierarchy import dendrogram, linkage
+    from sklearn.cluster import AgglomerativeClustering
+    
+    Z = linkage(X, method='ward')
+    
+    agg = AgglomerativeClustering(n_clusters=3, linkage='ward')
+    labels = agg.fit_predict(X)
+
+DBSCAN:
+
+    from sklearn.cluster import DBSCAN
+    
+    dbscan = DBSCAN(eps=0.5, min_samples=5)
+    labels = dbscan.fit_predict(X)
+
+GMM:
+
+    from sklearn.mixture import GaussianMixture
+    
+    gmm = GaussianMixture(n_components=3, random_state=42)
+    labels = gmm.fit_predict(X)
+    probs = gmm.predict_proba(X)
+
+EVALUATION:
+
+    from sklearn.metrics import silhouette_score, davies_bouldin_score
+    from sklearn.metrics import calinski_harabasz_score
+    
+    silhouette = silhouette_score(X, labels)
+    davies = davies_bouldin_score(X, labels)
+    calinski = calinski_harabasz_score(X, labels)
+
+================================================================================
+                    6. COMPLETE CODE EXAMPLES
+================================================================================
+
+EXAMPLE 1: K-Means Clustering
+──────────────────────────────
+
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+from sklearn.metrics import silhouette_score
+import matplotlib.pyplot as plt
+
+print("="*70)
+print("EXAMPLE 1: K-Means Clustering")
+print("="*70)
+
+X, y = make_blobs(n_samples=300, centers=3, random_state=42)
+
+print(f"\nDataset: {X.shape[0]} samples, {X.shape[1]} features")
+
+for k in [2, 3, 4, 5]:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    labels = kmeans.fit_predict(X)
+    sil = silhouette_score(X, labels)
+    wcss = kmeans.inertia_
+    print(f"   K={k}: Silhouette={sil:.4f}, WCSS={int(wcss)}")
+
+EXAMPLE 2: Finding Optimal K (Elbow Method)
+─────────────────────────────────────────
+
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+
+X, y = make_blobs(n_samples=500, centers=3, random_state=42)
+
+wcss = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X)
+    wcss.append(kmeans.inertia_)
+
+print("\nElbow Method:")
+for k, w in enumerate(wcss, 1):
+    print(f"   K={k}: WCSS={int(w)}")
+
+EXAMPLE 3: Hierarchical Clustering
+────────────────────────────────
+
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.datasets import make_blobs
+
+X, y = make_blobs(n_samples=200, centers=3, random_state=42)
+
+for linkage in ['ward', 'complete', 'average']:
+    agg = AgglomerativeClustering(n_clusters=3, linkage=linkage)
+    labels = agg.fit_predict(X)
+    sil = silhouette_score(X, labels)
+    print(f"{linkage} linkage: Silhouette={sil:.4f}")
+
+EXAMPLE 4: DBSCAN
+────────────────
+
+from sklearn.cluster import DBSCAN
+from sklearn.datasets import make_moons
+
+X, y = make_moons(n_samples=300, noise=0.1, random_state=42)
+
+dbscan = DBSCAN(eps=0.2, min_samples=5)
+labels = dbscan.fit_predict(X)
+
+n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+n_noise = list(labels).count(-1)
+
+print(f"\nDBSCAN: {n_clusters} clusters, {n_noise} noise points")
+
+EXAMPLE 5: GMM
+────────────────
+
+from sklearn.mixture import GaussianMixture
+from sklearn.datasets import make_blobs
+
+X, y = make_blobs(n_samples=300, centers=3, random_state=42)
+
+gmm = GaussianMixture(n_components=3, random_state=42)
+labels = gmm.fit_predict(X)
+
+print(f"\nGMM: Silhouette={silhouette_score(X, labels):.4f}")
+
+for i in range(3):
+    prob = gmm.predict_proba(X)[:, i].mean()
+    print(f"   Cluster {i}: avg probability = {prob:.4f}")
+
+EXAMPLE 6: Compare All Methods
+───────────────────────────────────────
+
+from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
+from sklearn.mixture import GaussianMixture
+from sklearn.datasets import make_blobs
+from sklearn.metrics import silhouette_score
+
+X, y = make_blobs(n_samples=300, centers=3, random_state=42)
+
+methods = {
+    'K-Means': KMeans(n_clusters=3, random_state=42),
+    'Hierarchical': AgglomerativeClustering(n_clusters=3),
+    'DBSCAN': DBSCAN(eps=0.5, min_samples=5),
+    'GMM': GaussianMixture(n_components=3, random_state=42)
+}
+
+print("\nComparison:")
+for name, model in methods.items():
+    try:
+        labels = model.fit_predict(X)
+        if len(set(labels)) > 1:
+            sil = silhouette_score(X, labels)
+            print(f"   {name:<15}: Silhouette={sil:.4f}")
+        else:
+            print(f"   {name:<15}: single cluster")
+    except:
+        print(f"   {name:<15}: failed")
+
+EXAMPLE 7: Customer Segmentation
+───────────────────────────────────────
+
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+np.random.seed(42)
+
+n_customers = 500
+data = {
+    'Annual_Income': np.random.normal(50000, 15000, n_customers),
+    'Spending_Score': np.random.normal(50, 15, n_customers),
+    'Age': np.random.normal(35, 10, n_customers)
+}
+
+X = np.column_stack([data['Annual_Income'], data['Spending_Score'], data['Age']])
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+kmeans = KMeans(n_clusters=5, random_state=42)
+labels = kmeans.fit_predict(X_scaled)
+
+print("\nCustomer Segments:")
+for i in range(5):
+    mask = labels == i
+    print(f"   Segment {i}: {mask.sum()} customers")
+    print(f"      Avg Income: ${data['Annual_Income'][mask].mean():.0f}")
+    print(f"      Avg Spending: {data['Spending_Score'][mask].mean():.0f}")
+    print(f"      Avg Age: {data['Age'][mask].mean():.0f}")
+
+================================================================================
+                    SUMMARY
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                    CLUSTERING SUMMARY                          │
+    ├─────────────────────────────────────────────────────────────── │
+    │                                                             │
+    │   TYPES:                                                    │
+    │   • K-Means: Centroid-based, requires K                    │
+    │   • Hierarchical: Tree structure, no K needed             │
+    │   • DBSCAN: Density-based, finds outliers                 │
+    │   • GMM: Probabilistic, soft assignments                  │
+    │                                                             │
+    │   PROS:                                                     │
+    │   ✓ No labels needed                                       │
+    │   ✓ Finds hidden patterns                                  │
+    │   ✓ Good for exploration                                   │
+    │                                                             │
+    │   CONS:                                                     │
+    │   ✗ Hard to evaluate (no ground truth)                   │
+    │   ✗ K-Means sensitive to initialization                 │
+    │   ✗ Assumption of cluster shapes                          │
+    │                                                             │
+    │   BEST FOR:                                                 │
+    │   • Customer segmentation                                 │
+    │   • Anomaly detection                                     │
+    │   • Document organization                                 │
+    │   • Image compression                                      │
+    │                                                             │
+    └──────���─���────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================
