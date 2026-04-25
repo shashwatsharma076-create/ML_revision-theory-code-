@@ -16,7 +16,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [Ensemble Methods](./Ensemble_Complete_Guide.txt) ✅ - Random Forest, Boosting, Voting, Stacking
 
 ### Unsupervised Learning
-- [Clustering](./notebooks/06_clustering.md) (Coming Soon)
+- [Clustering](./Clustering_Complete_Guide.txt) ✅ - K-Means, Hierarchical, DBSCAN, GMM
 - [Principal Component Analysis](./notebooks/07_pca.md) (Coming Soon)
 
 ## Quick Start
@@ -153,3 +153,16 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 11. Stacking (Meta-learner)
 12. sklearn Implementation
 13. Comparison of All Methods
+
+## Clustering Sub-topics ✅
+
+1. Introduction to Clustering (Unsupervised Learning)
+2. K-Means Clustering (Algorithm, Initialization, Elbow Method)
+3. Hierarchical Clustering (Agglomerative, Dendrogram, Linkage Methods)
+4. DBSCAN (Density-Based, Outlier Detection)
+5. Gaussian Mixture Models (GMM, Soft Clustering)
+6. Distance Metrics (Euclidean, Manhattan, Cosine)
+7. Evaluation Metrics (Silhouette Score, Davies-Bouldin)
+8. sklearn Implementation
+9. Customer Segmentation Practical Example
+10. Anomaly Detection with DBSCAN
