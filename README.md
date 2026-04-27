@@ -17,7 +17,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 
 ### Unsupervised Learning
 - [Clustering](./Clustering_Complete_Guide.txt) ✅ - K-Means, Hierarchical, DBSCAN, GMM
-- [Principal Component Analysis](./notebooks/07_pca.md) (Coming Soon)
+- [Principal Component Analysis](./PCA_Complete_Guide.txt) ✅ - Eigenvectors, Dimensionality Reduction, sklearn
 
 ## Quick Start
 
@@ -166,3 +166,16 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 8. sklearn Implementation
 9. Customer Segmentation Practical Example
 10. Anomaly Detection with DBSCAN
+
+## Principal Component Analysis (PCA) Sub-topics ✅
+
+1. Introduction to PCA (Dimensionality Reduction)
+2. Why PCA? (Variance, Compression, Visualization)
+3. Mathematical Derivation (Eigendecomposition, Covariance)
+4. PCA Algorithm (Step-by-Step)
+5. Choosing Number of Components (95% Variance, Elbow)
+6. PCA for Dimensionality Reduction
+7. Reconstruction & Inverse Transform
+8. Implementation with sklearn
+9. PCA in ML Pipelines
+10. Image Compression Practical Example
