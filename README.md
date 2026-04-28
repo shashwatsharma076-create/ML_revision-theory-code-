@@ -19,6 +19,9 @@ Repository for revising machine learning concepts with comprehensive code exampl
 - [Clustering](./Clustering_Complete_Guide.txt) ✅ - K-Means, Hierarchical, DBSCAN, GMM
 - [Principal Component Analysis](./PCA_Complete_Guide.txt) ✅ - Eigenvectors, Dimensionality Reduction, sklearn
 
+### Time Series Forecasting
+- [ARIMA](./ARIMA_Complete_Guide.txt) ✅ - Stationarity, ACF/PACF, SARIMA
+
 ## Quick Start
 
 ```bash
@@ -179,3 +182,18 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 8. Implementation with sklearn
 9. PCA in ML Pipelines
 10. Image Compression Practical Example
+
+## Time Series Forecasting (ARIMA) Sub-topics ✅
+
+1. Introduction to Time Series
+2. Time Series Components (Trend, Seasonality, Residuals)
+3. Stationarity & Unit Root (ADF Test)
+4. Autocorrelation (ACF) & Partial Autocorrelation (PACF)
+5. ARIMA Models (AR, I, MA)
+6. Mathematical Derivation (Backshift Operator)
+7. Model Identification (p, d, q)
+8. Parameter Estimation (MLE)
+9. Forecasting with ARIMA
+10. Seasonal ARIMA (SARIMA)
+11. Model Selection (AIC/BIC)
+12. Residual Analysis
