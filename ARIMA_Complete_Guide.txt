@@ -1,0 +1,634 @@
+================================================================================
+                    TIME SERIES FORECASTING - ARIMA
+                Complete Guide with Derivations & Code
+================================================================================
+
+================================================================================
+                        TABLE OF CONTENTS
+================================================================================
+
+1. Introduction to Time Series
+2. Time Series Components (Trend, Seasonality, Residuals)
+3. Stationarity & Unit Root
+4. Autocorrelation (ACF) & Partial Autocorrelation (PACF)
+5. ARIMA Models (AR, I, MA)
+6. ARIMA Mathematical Derivation
+7. Model Identification (p, d, q)
+8. Parameter Estimation
+9. Forecasting with ARIMA
+10. Seasonal ARIMA (SARIMA)
+11. Implementation with sklearn/statsmodels
+12. Complete Code Examples
+
+================================================================================
+                    1. INTRODUCTION TO TIME SERIES
+================================================================================
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │                    TIME SERIES                                        │
+    │                    ───────────                                       │
+    │                                                                     │
+    │   Sequence of data points indexed in time order.              │
+    │   Unlike i.i.d. data, adjacent points are correlated!         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KEY PROPERTIES:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ✓ TEMPORAL DEPENDENCE                                          │
+    │     Current value depends on past values                          │
+    │                                                                     │
+    │   ✓ ORDERED observations                                        │
+    │     Order matters, not just values                             │
+    │                                                                     │
+    │   ✓ CAN BE NON-STATIONARY                                        │
+    │     Statistics change over time                                 │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+EXAMPLES OF TIME SERIES:
+
+    • Stock prices              • Temperature readings
+    • Sales data               • GDP growth
+    • Website traffic         • Hospital admissions
+    • Currency exchange       • IoT sensor data
+
+================================================================================
+                    2. TIME SERIES COMPONENTS
+================================================================================
+
+DECOMPOSITION MODEL:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Y(t) = T(t) + S(t) + R(t)                                       │
+    │                                                                     │
+    │   where:                                                        │
+    │   • T(t) = Trend (long-term movement)                          │
+    │   • S(t) = Seasonality (cyclic pattern)                        │
+    │   • R(t) = Residual/Noise (random fluctuations)                │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+1. TREND T(t):
+─────────────────────────────────────────────────────────────────────
+
+    Visual:
+    
+    Price  ↑
+           │       ╱
+           │     ╱
+           │   ╱
+           │ ╱
+           └─────────────→ Time
+    
+    • Long-term increase or decrease
+    • Linear or non-linear
+    • Can be removed by differencing
+
+2. SEASONALITY S(t):
+─────────────────────────────────────────────────────────────────────
+
+    Visual:
+    
+           ┌───┐   ┌───┐   ┌───┐   ┌───┐
+           │   │   │   │   │   │   │   │
+        ───┘   └──┘   └──┘   └──┘   └──┘→ Time
+    
+    • Repeating pattern at fixed intervals
+    • Monthly, quarterly, yearly
+    • Must identify period (m = 12 for monthly)
+
+3. RESIDUAL R(t):
+─────────────────────────────────────────────────────────────────────
+
+    Visual:
+    
+           │   ┌─┐       ┌─┐
+           │ ┌─┘ └─┐   ┌─┘ └─┐
+        ───┴─┘     └───┘     └────────→ Time
+    
+    • Random fluctuations
+    • Should be white noise if model is good
+    • Should be stationary
+
+TYPES OF DECOMPOSITION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ADDITIVE:    Y(t) = T(t) + S(t) + R(t)                         │
+    │   (constant seasonality)                                         │
+    │                                                                     │
+    │   MULTIPLICATIVE: Y(t) = T(t) × S(t) × R(t)                       │
+    │   (seasonality grows with trend)                                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    3. STATIONARITY & UNIT ROOT
+================================================================================
+
+DEFINITION OF STATIONARITY:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Strict Stationarity:                                            │
+    │   Distribution of (X₁,...,Xₙ) = distribution of                │
+    │   (X₁₊ₖ,...,Xₙ₊ₖ) for any k                                    │
+    │                                                                     │
+    │   Weak Stationarity (Wide-Sense):                                │
+    │   • E[Xₜ] = μ (constant mean)                                   │
+    │   • Var[Xₜ] = σ² (constant variance)                           │
+    │   • Cov(Xₜ, Xₜ₊ₖ) = γₖ (depends only on lag k)                 │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+WHY STATIONARITY MATTERS:
+
+    ✗ ARIMA requires stationary data!
+    ✗ Non-stationary = unit root = spurious regressions
+    ✗ Must difference to achieve stationarity
+
+UNIT ROOT:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Random Walk: Xₜ = Xₜ₋₁ + εₜ                                    │
+    │                                                                     │
+    │   If Xₜ = ρ × Xₜ₋₁ + εₜ with ρ = 1:                             │
+    │   • Unit root (non-stationary)                                    │
+    │   • Variance increases with time                                 │
+    │   • Correlation with past = 1 for all lags!                    │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+TESTING STATIONARITY:
+
+    Augmented Dickey-Fuller (ADF) Test:
+    
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   H₀: Unit root exists (non-stationary)                          │
+    │   H₁: Stationary                                                  │
+    │                                                                     │
+    │   If p-value < 0.05 → Reject H₀ → Stationary                      │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+KPSS Test (Complementary):
+    
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   H₀: Stationary                                                  │
+    │   H₁: Unit root                                                   │
+    │                                                                     │
+    │   If p-value < 0.05 → Reject H₀ → Non-stationary                 │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    4. AUTOCORRELATION (ACF) & PACF
+================================================================================
+
+AUTOCOVARIANCE:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   γₖ = Cov(Xₜ, Xₜ₊ₖ) = E[(Xₜ - μ)(Xₜ₊ₖ - μ)]                    │
+    │                                                                     │
+    │   where k = lag                                                   │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+AUTOCORRELATION (ACF):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ρₖ = γₖ / γ₀                                                     │
+    │                                                                     │
+    │   where γ₀ = Var(Xₜ)                                              │
+    │                                                                     │
+    │   Range: -1 ≤ ρₖ ≤ 1                                             │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+PARTIAL AUTOCORRELATION (PACF):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   PACF(k) = correlation between Xₜ and Xₜ₊ₖ                   │
+    │   controlling for intermediate values                            │
+    │                                                                     │
+    │   More useful for identifying AR order!                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+ACF/PACF PATTERNS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   AR(p):                                                         │
+    │   • ACF: Decays exponentially or sinusoidal                      │
+    │   • PACF: Cuts off after lag p                                   │
+    │                                                                     │
+    │   MA(q):                                                         │
+    │   • ACF: Cuts off after lag q                                    │
+    │   • PACF: Decays exponentially                                    │
+    │                                                                     │
+    │   ARMA(p,q):                                                     │
+    │   • Both decay exponentially                                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+VISUAL:
+
+    ACF (MA(1)):              PACF (AR(1)):
+    
+    1.0 ┤│                  1.0 ┤│
+       ││▕                   │ │
+    0.5 ┤│ ▹                   │ ▹
+       ││   ▹                0.5 ┤│
+    0.0 ┼─┼─────→              0.0 ┼─┼─────→
+       1  2  3                    1  2  3
+         Lag                      Lag
+
+================================================================================
+                    5. ARIMA MODELS
+================================================================================
+
+ARIMA = AutoRegressive Integrated Moving Average
+
+MODEL NOTATION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ARIMA(p, d, q)                                                  │
+    │                                                                     │
+    │   where:                                                        │
+    │   • p = order of AR (autoregressive) part                        │
+    │   • d = order of differencing (integration)                    │
+    │   • q = order of MA (moving average) part                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+COMPONENT 1: AUTOREGRESSIVE (AR(p))
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Xₜ = c + φ₁Xₜ₋₁ + φ₂Xₜ₋₂ + ... + φₚXₜ₋ₚ + εₜ                  │
+    │                                                                     │
+    │   Current value depends on p past values!                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+Stationarity condition for AR(p):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     ���
+    │   All roots of 1 - φ₁z - φ₂z² - ... - φₚzᵖ = 0                  │
+    │   must lie OUTSIDE unit circle (|z| > 1)                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+COMPONENT 2: INTEGRATED (I(d))
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   d = 1: First difference                                        │
+    │   ΔXₜ = Xₜ - Xₜ₋₁                                                │
+    │                                                                     │
+    │   d = 2: Second difference                                       │
+    │   Δ²Xₜ = Δ(ΔXₜ) = Xₜ - 2Xₜ₋₁ + Xₜ₋₂                             │
+    │                                                                     │
+    │   Makes non-stationary data stationary!                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+COMPONENT 3: MOVING AVERAGE (MA(q))
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Xₜ = c + εₜ + θ₁εₜ₋₁ + θ₂εₜ₋₂ + ... + θᵠεₜ₋ᵠ                  │
+    │                                                                     │
+    │   Current value depends on q past error terms!                   │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+COMBINED ARIMA(p,d,q):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ΔᵈXₜ = c + Σᵢ₌₁ᵖ φᵢΔᵈXₜ₋ᵢ + εₜ + Σⱼ₌₁ᵠ θⱼεₜ₋ⱼ                     │
+    │                                                                     │
+    │   where Δᵈ is differenced d times                                │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    6. ARIMA MATHEMATICAL DERIVATION
+================================================================================
+
+BACKSHIFT OPERATOR:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   B[Xₜ] = Xₜ₋₁                                                   │
+    │                                                                     │
+    │   Bᵏ[Xₜ] = Xₜ₋ₖ                                                  │
+    │                                                                     │
+    │   Δ = 1 - B                                                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+AR(p) IN OPERATOR FORM:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   φ(B)Xₜ = εₜ                                                    │
+    │                                                                     │
+    │   where φ(B) = 1 - φ₁B - φ₂B² - ... - φₚBᵖ                     │
+    │                                                                     │
+    │   φ(B) is the AR polynomial                                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+MA(q) IN OPERATOR FORM:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Xₜ = θ(B)εₜ                                                    │
+    │                                                                     │
+    │   where θ(B) = 1 + θ₁B + θ₂B² + ... + θᵠBᵠ                      │
+    │                                                                     │
+    │   θ(B) is the MA polynomial                                      │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+ARIMA(p,d,q) IN OPERATOR FORM:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   φ(B)ΔᵈXₜ = θ(B)εₜ                                              │
+    │                                                                     │
+    │   AR polynomial:  φ(B) = 1 - φ₁B - φ₂B² - ... - φₚBᵖ           │
+    │   MA polynomial: θ(B) = 1 + θ₁B + θ₂B² + ... + θᵠBᵠ           │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+EXPECTED VALUE & VARIANCE:
+
+    ┌────────────────────────────────────────────────────────────────────��┐
+    │                                                                     │
+    │   AR(p):                                                         │
+    │   E[Xₜ] = c / (1 - Σφᵢ)                                         │
+    │   Var[Xₜ] = σ²ε × (1 + Σθᵢ²)  (large t, stationary)              │
+    │                                                                     │
+    │   MA(q):                                                         │
+    │   E[Xₜ] = c                                                      │
+    │   Var[Xₜ] = σ²ε × (1 + Σθᵢ²)                                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    7. MODEL IDENTIFICATION (p, d, q)
+================================================================================
+
+STEP 1: Find d (differencing order)
+─────────────────────────────────────────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   1. Plot the series                                               │
+    │   2. Test for stationarity (ADF test)                             │
+    │   3. If non-stationary, difference (d=1)                         │
+    │   4. Test again, if needed, d=2                                   │
+    │                                                                     │
+    │   Rule: Don't overdifference!                                     │
+    │   (d=0 if stationary, d=1 if trend only, d=2 for trend+accel)  │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+STEP 2: Find p (AR order)
+─────────────────────────────────────────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Look at PACF plot:                                               │
+    │   • Significant spike at lag p, then cutoff                     │
+    │   • Use p = lag of last significant spike                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+STEP 3: Find q (MA order)
+─────────────────────────────────────────────────────────────────────
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Look at ACF plot:                                                │
+    │   • Significant spike at lag q, then cutoff                     │
+    │   • Use q = lag of last significant spike                       │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+IDENTIFICATION TABLE:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   ACF          PACF         Model                                 │
+    │   ────────────────────────────────                               │
+    │   Decays       Cuts off     AR(p)                                 │
+    │   Cuts off     Decays       MA(q)                                 │
+    │   Decays       Decays       ARMA(p,q)                            │
+    │   All zero     All zero     White noise                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+AIC/BIC CRITERION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   AIC = -2log(L) + 2k                                             │
+    │   BIC = -2log(L) + k log(n)                                      │
+    │                                                                     │
+    │   where L = likelihood, k = parameters, n = observations         │
+    │                                                                     │
+    │   Choose model with lowest AIC/BIC                               │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    8. PARAMETER ESTIMATION
+================================================================================
+
+MAXIMUM LIKELIHOOD ESTIMATION (MLE):
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   For ARIMA, maximize:                                            │
+    │                                                                     │
+    │   L(φ, θ, σ²) = ∏ₜ f(xₜ|xₜ₋₁,..., φ, θ, σ²)                    │
+    │                                                                     │
+    │   where f is conditional normal density                          │
+    │                                                                     │
+    └────────────��─��──────────────────────────────────────────────────────┘
+
+CONDITIONAL MLE:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   Use first p+q observations as initial conditions               │
+    │   Then maximize conditional likelihood                          │
+    │   Much faster than exact MLE                                     │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+ESTIMATION ALGORITHMS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   1. Conditional Least Squares (CLS)                            │
+    │      Minimize Σεₜ²                                               │
+    │                                                                     │
+    │   2. Conditional MLE (Gaussian)                                 │
+    │      Maximize conditional log-likelihood                        │
+    │                                                                     │
+    │   3. Exact MLE (full information)                              │
+    │      Uses Kalman filter                                          │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    9. FORECASTING WITH ARIMA
+================================================================================
+
+h-STEP FORECAST:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   For ARIMA(p,d,q) with ΔᵈXₜ = φ(B)⁻¹ θ(B)εₜ                     │
+    │                                                                     │
+    │   Forecast at time t+h:                                           │
+    │                                                                     │
+    │   Ŷₜ(h) = E[Xₜ₊ₕ | Xₜ, Xₜ₋₁, ...]                             │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+FORECAST EQUATION:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   AR(1): Ŷₜ(1) = c + φ₁Xₜ                                       │
+    │   AR(1): Ŷₜ(2) = c + φ₁Ŷₜ(1) = c + φ₁(c + φ₁Xₜ)            │
+    │                                                                     │
+    │   As h increases, forecasts converge to unconditional mean!         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+PREDICTION INTERVALS:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   For AR(p) with σ²ε:                                              │
+    │                                                                     │
+    │   95% PI: Ŷₜ(h) ± 1.96 × σε × √(1 + Σφᵢ² for i < h)           │
+    │                                                                     │
+    │   Width increases with forecast horizon!                         │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    10. SEASONAL ARIMA (SARIMA)
+================================================================================
+
+SARIMA MODEL:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   SARIMA(p,d,q)(P,D,Q)[s]                                          │
+    │                                                                     │
+    │   where:                                                        │
+    │   • s = seasonal period (12=monthly, 4=quarterly)              │
+    │   • P,D,Q = seasonal AR,I,MA orders                              │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+MULTIPLICATIVE SEASONAL MODEL:
+
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                                                                     │
+    │   φ(B)Φ(Bˢ)ΔᵈΔˢᴰXₜ = θ(B)Θ(Bˢ)εₜ                            │
+    │                                                                     │
+    │   where:                                                        │
+    │   • Bˢ = seasonal backshift (B¹² for monthly)                  │
+    │   • Φ = seasonal AR polynomial                                  │
+    │   • Θ = seasonal MA polynomial                                │
+    │   • Δˢᴰ = seasonal differencing                              │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+EXAMPLE: SARIMA(1,1,1)(1,1,1)[12]
+
+    ┌─────────────────────────────────────────────────���─���─────────────────┐
+    │                                                                     │
+    │   For monthly data with yearly seasonality:                       │
+    │                                                                     │
+    │   (1-B)(1-B¹²)Xₜ = (1+θ₁B)(1+Θ₁B¹²)εₜ                          │
+    │                                                                     │
+    │   Non-seasonal: AR(1), I(1), MA(1)                                │
+    │   Seasonal: AR(1), I(1), MA(1) with period 12                    │
+    │                                                                     │
+    └─────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                    11. IMPLEMENTATION
+================================================================================
+
+LIBRARIES:
+
+    from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
+    from statsmodels.tsa.stattools import acf, pacf
+    from statsmodels.tsa.stattools import adfuller
+    from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+    import pandas as pd
+    import numpy as np
+
+BASIC ARIMA:
+
+    from statsmodels.tsa.arima.model import ARIMA
+    
+    # Fit model
+    model = ARIMA(data, order=(p, d, q))
+    fitted = model.fit()
+    
+    # Forecast
+    forecast = fitted.forecast(steps=h)
+    
+    # Summary
+    print(fitted.summary())
+
+AUTO-ARIMA (automatic selection):
+
+    from pmdarima import auto_arima
+    
+    model = auto_arima(data, 
+                     p=range(0, 3),
+                     d=range(0, 2),
+                     q=range(0, 3),
+                     seasonal=True,
+                     m=12)
+    
+    print(model.summary())
+
+================================================================================
+                    12. COMPLETE CODE EXAMPLES
+================================================================================
+
+(SEE ARIMA.py FOR RUNNABLE EXAMPLES)
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================
