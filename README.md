@@ -2,7 +2,7 @@
 
 Repository for revising machine learning concepts with comprehensive code examples and theory.
 
-## Topics
+## Topics...
 
 ### Supervised Learning
 - [Linear Regression](./notebooks/01_linear_regression.md) - Simple, Multiple, Polynomial
