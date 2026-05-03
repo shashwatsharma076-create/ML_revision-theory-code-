@@ -2,7 +2,7 @@
 
 Repository for revising machine learning concepts with comprehensive code examples and theory.
 
-## Topics...
+## Topics
 
 ### Supervised Learning
 - [Linear Regression](./notebooks/01_linear_regression.md) - Simple, Multiple, Polynomial
@@ -21,6 +21,7 @@ Repository for revising machine learning concepts with comprehensive code exampl
 
 ### Time Series Forecasting
 - [ARIMA](./ARIMA_Complete_Guide.txt) ✅ - Stationarity, ACF/PACF, SARIMA
+- [Prophet](./Prophet_Complete_Guide.txt) ✅ - Trend, Seasonality, Holidays
 
 ## Quick Start
 
@@ -197,3 +198,18 @@ jupyter notebook notebooks/01_linear_regression.ipynb
 10. Seasonal ARIMA (SARIMA)
 11. Model Selection (AIC/BIC)
 12. Residual Analysis
+
+## Prophet (Facebook Forecasting) Sub-topics ✅
+
+1. Introduction to Prophet
+2. Prophet Model Components (Trend, Seasonality, Holidays)
+3. Mathematical Derivation (Additive & Multiplicative)
+4. Trend Modeling (Linear & Logistic Growth)
+5. Changepoint Detection
+6. Seasonality Modeling (Fourier Series)
+7. Holiday & Event Effects
+8. Custom Seasonalities
+9. Hyperparameter Tuning
+10. Uncertainty Intervals
+11. Cross-Validation & Performance Metrics
+12. sklearn Implementation
